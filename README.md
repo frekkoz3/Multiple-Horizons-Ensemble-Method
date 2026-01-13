@@ -20,6 +20,7 @@ The method combines forecasts generated at multiple prediction horizons into a s
 ├─ data             # data used for evaluation of the method
 ├─ experiments      # folder containing different tests
 ├─ report           # documentation of the final report
+├─ literautre       # folder containing literature research about the project
 └─ src              # method's Python implementation
 ```
 
