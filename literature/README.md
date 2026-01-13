@@ -13,7 +13,18 @@ This folder contains several papers. In this section we will provide a brief sum
 
 In this paper, the authors present extensive empirical evidence on the effectiveness of forecast combination through weighted averages. They evaluate five different procedures for estimating combination weights, originally proposed in the foundational paper *The Combination of Forecasts* of *Bates and Granger (1969)* and *Newbold and Granger (1974)*.
 
-**! This could be completed by adding what are the methods proposed by Bates and Granger!**
+Assuming to have $M$ forecasts $f_{1, t}, ..., f_{M, t}$, the combined forecast is
+$$
+    \hat{y}_t = \sum_{i=1}^M{w_i f_{i_t}}\text{ ,  } \sum_{i=1}^M {w_i} = 1
+$$
+
+The five procedure to compute the weights proposed by *Bates and Granger (1969)* are:
+
+- Simple (Equal) Weights, $w_i = \frac{1}{M}$
+- Inverse Mean Squared Error (MSE) Weights, $w_i \propto \frac{1}{MSE_i}$
+- Minimum Variance (Optimal) Weights, $w  = \frac{\Sigma^{-1}1}{1^T\Sigma^{-1}1}$, where $\Sigma$ is the covariance matrix of forecast errors
+- Regression-Based Weights (Unconstrained OLS), estimate weights by regressing the target on forecasts $y_t = \beta_1 f_{1, t} + ... + \beta_M f_{M, t}$
+- Constrained Regression (Sum-to-One), same as regression, but enforce $\sum_{i=1}^M {w_i} = 1$
 
 The weighting methods are compared across multiple datasets and forecasting scenarios, and their performance is assessed relative to both individual forecasting models and a simple equal-weight average. In particular the 1001 time series used in the *Makridakis et al., (1982, 1983)* forecasting accuracy study
 were used.
