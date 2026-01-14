@@ -8,8 +8,10 @@ This folder contains several papers. In this section we will provide a brief sum
 
 1983, *Robert L. Winkler  and  Spyros Makridakis*
 
-> **Abstract**
- Aggregating information by combining forecasts from two or more forecasting methods is an alternative to using just a single method. In this paper we provide extensive empirical results showing that combined forecasts obtained through weighted averages can be quite accurate. Five procedures for estimating weights are investigated, and two appear to be superior to the others. These two procedures provide forecasts that are more accurate overall than forecasts from individual methods. Furthermore, they are superior to forecasts found from a simple unweighted average of the same methods.
+> **Abstract** \
+ Aggregating information by combining forecasts from two or more forecasting methods is an alternative to using just a single method. \
+> In this paper we provide extensive empirical results showing that combined forecasts obtained through weighted averages can be quite accurate. \
+> Five procedures for estimating weights are investigated, and two appear to be superior to the others. These two procedures provide forecasts that are more accurate overall than forecasts from individual methods. Furthermore, they are superior to forecasts found from a simple unweighted average of the same methods.
 
 In this paper, the authors present extensive empirical evidence on the effectiveness of forecast combination through weighted averages. They evaluate five different procedures for estimating combination weights, originally proposed in the foundational paper *The Combination of Forecasts* of *Bates and Granger (1969)* and *Newbold and Granger (1974)*.
 
@@ -34,8 +36,14 @@ The results show that two of the proposed weighting procedures consistently outp
 
 2023, *V Cerqueira, L Torgo*
 
-> **Abstract**
-Ensemble methods combine predictions from multiple models to improve forecasting accuracy. This paper investigates the effectiveness of multi-output ensembles for multi-step time series forecasting problems. While dynamic ensembles have been extensively studied for one-step ahead forecasting, their application to multi-step forecasting remains largely unexplored, particularly regarding how combination rules should be applied across different forecasting horizons. We conducted comprehensive experiments using 3568 time series from diverse domains and an ensemble of 30 multi-output models to address this research gap. Our findings reveal that dynamic ensembles based on arbitrating and windowing techniques achieve the best performance according to average rank. Interestingly, we observed that most dynamic approaches struggle to outperform a simple static ensemble that assigns equal weights to all constituent models, especially as the forecasting horizon increases. The performance advantage of dynamic methods is more pronounced in short-term forecasting scenarios. The experiments are publicly available in a repository.
+> **Abstract** \
+Ensemble methods combine predictions from multiple models to improve forecasting accuracy. \
+> This paper investigates the effectiveness of multi-output ensembles for multi-step time series forecasting problems. \
+> While dynamic ensembles have been extensively studied for one-step ahead forecasting, their application to multi-step forecasting remains largely unexplored, particularly regarding how combination rules should be applied across different forecasting horizons. \
+> We conducted comprehensive experiments using 3568 time series from diverse domains and an ensemble of 30 multi-output models to address this research gap. \
+> Our findings reveal that dynamic ensembles based on arbitrating and windowing techniques achieve the best performance according to average rank. \
+> Interestingly, we observed that most dynamic approaches struggle to outperform a simple static ensemble that assigns equal weights to all constituent models, especially as the forecasting horizon increases. \
+> **The performance advantage of dynamic methods is more pronounced in short-term forecasting scenarios**. The experiments are publicly available in a repository.
 
 In this paper, the authors study dynamic ensembles for multi-step problems, and specifically explore how combination weights can vary with horizon. It considers strategies such as computing weights for each horizon independently and propagating them across the forecast horizon.
 
@@ -77,7 +85,9 @@ Previous studies on multi-model ensemble forecasting mainly focused on the weigh
 
 **! TO COMPLETE! This under here is just a little introduction, an idea!**
 
-Even outside of horizon-specific work, there are empirical studies showing that variant weights (based on error/variance) can outperform equal-weight ensembles. For example, a comparative study in ensemble forecasting showed that weighting by a variant method (e.g., inverse variance/error-based) leads to better average forecast accuracy than equal weights.
+Even outside of horizon-specific work, there are empirical studies showing that Variant Weights (VW), based on variance of errors, can outperform equal-weight (EW) ensembles. \
+For example, a comparative study in ensemble forecasting showed that weighting by a variant method (e.g., inverse-of-variance-of-errors based) leads to better average forecast accuracy than equal weights. \
+A mathematical proof is given for demonstrate how VW ensemble methods provide, on average, better prediction than EW methods.
 
 ## 📄 Performance metrics for multi-step forecasting measuring win-loss, seasonal variance and forecast stability: an empirical study
 
@@ -89,3 +99,10 @@ This paper addresses the evaluation of multi-step point forecasting models. Curr
 **! TO COMPLETE! This under here is just a little introduction, an idea!**
 
 A recent paper on multi-step forecasting metrics emphasizes the importance of considering variance and stability of forecasts across horizons. It proposes metrics to quantify how forecast variance behaves across the forecast horizon, which is directly relevant for your method since you will measure horizon-specific variance anyway.
+
+
+## 📄 Analyses of Global Monthly Precipitation using Gauge Observations
+
+1996, Xei 
+
+Is the paper introducing weights based on inverse of variance error. 
