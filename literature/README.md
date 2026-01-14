@@ -32,6 +32,17 @@ The weighting methods are compared across multiple datasets and forecasting scen
 
 The results show that two of the proposed weighting procedures consistently outperform the others, yielding combined forecasts that are more accurate than those produced by any single method as well as by unweighted combinations.
 
+## 📄 Analyses of Global Monthly Precipitation using Gauge Observations
+
+1996, *Xei*
+
+> **Abstract**
+Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. Based on a variant weight (VW) method and the equal weight (EW) method, this study explored this topic through theoretical and real case analyses. A theoretical proof is made, showing that this VW method can improve the forecasting accuracy of
+a multi-model ensemble, in the case of either the same models combination or adding an even worse model into the original multi-model ensemble, compared to the EW method. Comparative multi-model ensemble forecasting experiments against a real case between the VW and EW methods show that the forecasting accuracy of a multi-model ensemble applying the VW method is better than that of each individual model (including the model from the European Centre for Medium-Range
+Weather Forecasts). The 2 m temperature forecasting applying the VW method is superior to that applying the EW method for all the multi-model ensembles. Both theoretical proof and numerical experiments show that an improved forecast, better than a best model, is generally possible.
+
+**! TO COMPLETE! This under here is just a little introduction, an idea!**
+
 ## 📄 Multi-output Ensembles for Multi-step Forecasting
 
 2023, *V Cerqueira, L Torgo*
@@ -99,12 +110,3 @@ This paper addresses the evaluation of multi-step point forecasting models. Curr
 **! TO COMPLETE! This under here is just a little introduction, an idea!**
 
 A recent paper on multi-step forecasting metrics emphasizes the importance of considering variance and stability of forecasts across horizons. It proposes metrics to quantify how forecast variance behaves across the forecast horizon, which is directly relevant for your method since you will measure horizon-specific variance anyway.
-
-## 📄 Analyses of Global Monthly Precipitation using Gauge Observations
-
-1996, *Xei*
-
-> **Abstract**
-Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. Based on a variant weight (VW) method and the equal weight (EW) method, this study explored this topic through theoretical and real case analyses. A theoretical proof is made, showing that this VW method can improve the forecasting accuracy of
-a multi-model ensemble, in the case of either the same models combination or adding an even worse model into the original multi-model ensemble, compared to the EW method. Comparative multi-model ensemble forecasting experiments against a real case between the VW and EW methods show that the forecasting accuracy of a multi-model ensemble applying the VW method is better than that of each individual model (including the model from the European Centre for Medium-Range
-Weather Forecasts). The 2 m temperature forecasting applying the VW method is superior to that applying the EW method for all the multi-model ensembles. Both theoretical proof and numerical experiments show that an improved forecast, better than a best model, is generally possible.
