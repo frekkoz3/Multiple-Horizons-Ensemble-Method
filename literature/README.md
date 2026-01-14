@@ -32,6 +32,8 @@ The weighting methods are compared across multiple datasets and forecasting scen
 
 The results show that two of the proposed weighting procedures consistently outperform the others, yielding combined forecasts that are more accurate than those produced by any single method as well as by unweighted combinations.
 
+--- 
+
 ## 📄 Analyses of Global Monthly Precipitation using Gauge Observations
 
 1996, *Xei*
@@ -42,6 +44,8 @@ a multi-model ensemble, in the case of either the same models combination or add
 Weather Forecasts). The 2 m temperature forecasting applying the VW method is superior to that applying the EW method for all the multi-model ensembles. Both theoretical proof and numerical experiments show that an improved forecast, better than a best model, is generally possible.
 
 **! TO COMPLETE! This under here is just a little introduction, an idea!**
+
+---
 
 ## 📄 Multi-output Ensembles for Multi-step Forecasting
 
@@ -87,18 +91,27 @@ Results show as it is not trivial to beat (on average) the simple combination me
 
 This study confirms that model performance varies across forecasting horizons and that horizon-aware weighting is meaningful. While most dynamic methods struggle to consistently outperform simple equal-weight ensembles, these findings motivate alternative approaches. Our work builds on this insight by proposing a variance-based horizon-dependent weighting strategy, focusing on predictive uncertainty rather than historical error alone.
 
+---
+
 ## 📄 A Comparative Study of Multi-Model Ensemble Forecasting Accuracy between Equal- and Variant-Weight Techniques
 
 2022, *Xiaomin Wei, Xiaogong Sun, Jilin Sun, Jinfang Yin, Jing Sun and Chongjian Liu*
 
 > **Abstract**
-Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. Based on a variant weight (VW) method and the equal weight (EW) method, this study explored this topic through theoretical and real case analyses. A theoretical proof is made, showing that this VW method can improve the forecasting accuracy of a multi-model ensemble, in the case of either the same models combination or adding an even worse model into the original multi-model ensemble, compared to the EW method. Comparative multi-model ensemble forecasting experiments against a real case between the VW and EW methods show that the forecasting accuracy of a multi-model ensemble applying the VW method is better than that of each individual model (including the model from the European Centre for Medium-Range Weather Forecasts). The 2 m temperature forecasting applying the VW method is superior to that applying the EW method for all the multi-model ensembles. Both theoretical proof and numerical experiments show that an improved forecast, better than a best model, is generally possible.
-
-**! TO COMPLETE! This under here is just a little introduction, an idea!**
+Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. \
+> Based on a variant weight (VW) method and the equal weight (EW) method, this study explored this topic through theoretical and real case analyses. \
+> A theoretical proof is made, showing that this VW method can improve the forecasting accuracy of a multi-model ensemble, in the case of either the same models combination or adding an even worse model into the original multi-model ensemble, compared to the EW method. \
+> Comparative multi-model ensemble forecasting experiments against a real case between the VW and EW methods show that the forecasting accuracy of a multi-model ensemble applying the VW method is better than that of each individual model (including the model from the European Centre for Medium-Range Weather Forecasts). T\
+> he 2 m temperature forecasting applying the VW method is superior to that applying the EW method for all the multi-model ensembles. Both theoretical proof and numerical experiments show that an improved forecast, better than a best model, is generally possible.
 
 Even outside of horizon-specific work, there are empirical studies showing that Variant Weights (VW), based on variance of errors, can outperform equal-weight (EW) ensembles. \
 For example, a comparative study in ensemble forecasting showed that weighting by a variant method (e.g., inverse-of-variance-of-errors based) leads to better average forecast accuracy than equal weights. \
-A mathematical proof is given for demonstrate how VW ensemble methods provide, on average, better prediction than EW methods.
+A mathematical proof is given for demonstrate how VW ensemble methods provide, on average, better prediction than EW methods. The result is also supported by empirical experiments, applied to continuous temperature.
+
+The number of models in the ensemble is pretty low (2-4). \
+All the models used (taken from previous papers) are geophysical models, so they have nothing to do with ML or statistical ones.
+
+---
 
 ## 📄 Performance metrics for multi-step forecasting measuring win-loss, seasonal variance and forecast stability: an empirical study
 
