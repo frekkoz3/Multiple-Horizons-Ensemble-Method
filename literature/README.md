@@ -28,8 +28,7 @@ The five procedure to compute the weights proposed by *Bates and Granger (1969)*
 - Regression-Based Weights (Unconstrained OLS), estimate weights by regressing the target on forecasts $y_t = \beta_1 f_{1, t} + ... + \beta_M f_{M, t}$
 - Constrained Regression (Sum-to-One), same as regression, but enforce $\sum_{i=1}^M {w_i} = 1$
 
-The weighting methods are compared across multiple datasets and forecasting scenarios, and their performance is assessed relative to both individual forecasting models and a simple equal-weight average. In particular the 1001 time series used in the *Makridakis et al., (1982, 1983)* forecasting accuracy study
-were used.
+The weighting methods are compared across multiple datasets and forecasting scenarios, and their performance is assessed relative to both individual forecasting models and a simple equal-weight average. In particular the 1001 time series used in the *Makridakis et al., (1982, 1983)* forecasting accuracy study were used.
 
 The results show that two of the proposed weighting procedures consistently outperform the others, yielding combined forecasts that are more accurate than those produced by any single method as well as by unweighted combinations.
 
