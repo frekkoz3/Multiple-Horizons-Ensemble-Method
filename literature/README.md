@@ -100,9 +100,11 @@ This paper addresses the evaluation of multi-step point forecasting models. Curr
 
 A recent paper on multi-step forecasting metrics emphasizes the importance of considering variance and stability of forecasts across horizons. It proposes metrics to quantify how forecast variance behaves across the forecast horizon, which is directly relevant for your method since you will measure horizon-specific variance anyway.
 
-
 ## 📄 Analyses of Global Monthly Precipitation using Gauge Observations
 
-1996, Xei 
+1996, *Xei*
 
-Is the paper introducing weights based on inverse of variance error. 
+> **Abstract**
+Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. Based on a variant weight (VW) method and the equal weight (EW) method, this study explored this topic through theoretical and real case analyses. A theoretical proof is made, showing that this VW method can improve the forecasting accuracy of
+a multi-model ensemble, in the case of either the same models combination or adding an even worse model into the original multi-model ensemble, compared to the EW method. Comparative multi-model ensemble forecasting experiments against a real case between the VW and EW methods show that the forecasting accuracy of a multi-model ensemble applying the VW method is better than that of each individual model (including the model from the European Centre for Medium-Range
+Weather Forecasts). The 2 m temperature forecasting applying the VW method is superior to that applying the EW method for all the multi-model ensembles. Both theoretical proof and numerical experiments show that an improved forecast, better than a best model, is generally possible.
