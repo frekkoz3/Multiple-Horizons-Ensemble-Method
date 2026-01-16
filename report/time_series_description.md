@@ -1,8 +1,10 @@
 # An introduction to Time Series
 
 The scope of this file is to introduce the reader to the main characteristics of Time Series and their Analysis. \
-Most of the information included derives from the first chapters of "*Time Series Analysis and Its Applications*", *R. H. Shumway, D. S. Stoffer, Springer, 2016*. \
-In Section 1, an introduction to some basic concepts is presented; in Section 2, some classic statistical models for Time Series are described.
+In Section 1, an introduction to some basic concepts is presented; in Section 2, some classic statistical models and modern machine learning architectures for Time Series are proposed.
+Most of the information in Chapter 1 comes from "*Time Series Analysis and Its Applications*", *R. H. Shumway, D. S. Stoffer, Springer, 2016*. For the statistical models, information is taken from "*Applied Time Series Analysis and Forecasting with Python*", *Huang, C., Petukhina, A., Springer, 202.*; Machine learning architectures descriptions are references to "*Modern Time Series Forecasting Using Python*", *Joseph, M., Tackes, J., Packt, 2024*.
+
+---
 
 ---
 
@@ -16,6 +18,7 @@ Two approaches for doing Time Series Analysis, different but not mutually exclus
 
 Analysis techniques rely on some assumptions. One of them is that continuous time series can be specified in terms of some finite-dimensional distribution functions, allowing to ... [TODO].
 
+---
 ### 1.1 Measures of Dependence
 A classic assumption in statistical inference is that data sampled are *independent and identically distributed* (*iid*); in time series analysis such assumption is clearly impossible to hold, since data collected over time usually share some properties, thus leading to *dependence*. \
 There exists a variety of measures of dependence:
@@ -40,6 +43,7 @@ $$\gamma_{XY}(s, t) = \mathbb{C}[x_s, y_t] = \mathbb{E}[(x_s - \mu_{Xs})(y_t - \
 $$\rho_{X, Y}(s, t) = \frac{\gamma_{XY}(s, t)}{\sqrt{\gamma_X (s, s) \gamma_Y (t, t)}}$$
 Extension are allowed also for more than two series (*multivariate time series*).
 
+---
 ### 1.2 Stationarity
 For allowing some kind of forecasting over a collection of sampled data, we can assume that the time series hides a sort of regularity over time. \
 A key concept in such context is the **stationarity**. In practice, a time series is *stationary* if its properties (mean, variance, covariance, ...) do not change over time, e.g. $\mathbb{E}[x_t] = \mu \ \forall t$.
@@ -56,6 +60,7 @@ If a time series is weakly stationary, (or, in the following, simply stationary)
 
 The concept of (weak) stationarity forms the basis of many analysis procedures.
 
+---
 ### 1.3 Time Series Decomposition
 Time Series usually show **trends** $\mathbf{T}$, i.e., they tend to increase or decrease over time, and/or **seasonalities** $\mathbf{S}$, i.e., they tend to have a repeated pattern over time.
 These two elements are the so-called *deterministic components* of a Time Series and can be extracted through a *decomposition* process.
@@ -82,9 +87,17 @@ $$
 
 ---
 
+---
+
+---
+
 ## 2. Classic Time Series models
 The following section discusses peculiarities of the most-widely used classic models used for describing and analyzing time series. \
 Subsection 2.1 introduces very basilar models, while Subsection 2.2 describes some more complex statistical structures. Subsection 2.3 presents more recent models, developed in the machine learning field.
+
+---
+
+---
 
 ### 2.1 Simple time series generators
 Here some common generators of time series samples are presented. \
@@ -93,7 +106,7 @@ Simple properties of these models are presented but not proved.
 
 The parameters of the following models can be estimated by simply applying classical Least Squares Errors, or using Maximum Likelihood Estimate under the assumption of gaussianity of the time series.
 
-
+---
 #### 2.1.1 White Noise
 *White Noise* is without any doubt the simples kind of time series. \
 It consists of a sequence of uncorrelated random variables, $x_t$, coming from a white-noise process $\text{wh}_X$ with zero mean and constant finite variance $\sigma^2_X$. \
@@ -101,7 +114,7 @@ Usually, such variables are assumed to be normally distributed, i.e., $x_t \sim 
 
 The autocorrelation matrix $\Gamma$ over a time series $X$ is here such that $\Gamma = diag (\sigma^2_X, \sigma^2_X, ..., \sigma^2_X)$. 
 
-
+---
 #### 2.1.2 Moving Average (MA) Models
 A simple extension of White Noise time series is given by replacing the $x_t$ with its **moving average**, an average that takes care of the value itself, its past value(s) and its future value(s), with some fixed *order* (like a "window") $q$. \
 For the case of $q = 1$, one gets $x_t = (w_{t-1}, w_t, w_{t+1}) / 3$. 
@@ -121,7 +134,7 @@ The following properties can be proven:
 
 For practical reasons, MA models are required to be *invertible*, i.e., one can extract a noise value $w_t$ as a (finite) linear combination of samples ${x_t, x_{t-1}, ..., x_0}$.
 
-
+---
 #### 2.1.3 Autoregressive (AR) Models
 An **autoregressive model** is a time series in which the current value $x_t$ depends linearly on its previous values, plus a stochastic term $w_t$ coming from a white noise process $\text{wh}_W(0, \sigma^2_W)$. \
 For an order of $p = 2$, 
@@ -145,11 +158,15 @@ Furthermore, if AR model is also stationary, it holds:
 
 If the sum of an AR model's weights is finite, then the model is called *causal*.
 
+---
+
+---
 
 ### 2.2 Classical Methods
 The following subsection presents improved classical models that combine in different (but similar) ways the concepts previously introduced.
 A brief description of the models' properties is provided, but not proved, as well.
 
+---
 #### 2.2.1 Autoregressive Moving Average (ARMA) Models
 The idea of ARMA models is to combine AR and MA properties and definitions:
 $$
@@ -166,7 +183,7 @@ Properties:
 
 > ⚠️ For building a model given the samples, these **should be stationary** (use some checks, e.g. `statmodels.tsa.stattools.adfuller` method). If not, use models like the following. ⚠️
 
-
+---
 #### 2.2.2 AR - Integrated - MA (ARIMA) Models
 ARIMA models have the same flavor of ARMA ones and become relevant once a time series shows some kind of trend. 
 
@@ -183,7 +200,7 @@ $$.
 
 Once derived the elements, the new time series $Y$ becomes an ARMA(p, q).
 
-
+--- 
 #### 2.2.3 Seasonal - ARIMA (SARIMA) Models
 SARIMA models allow the tractability of time series showing some kind of seasonality.
 The idea of SARIMA is someway similar to the ARIMA one: we want to explicitate some relationship between data "at the same period of the seasonality", e.g., linking temperature of Jan '26 to Jan '25.
@@ -198,7 +215,7 @@ $$
 Both ARIMA and SARIMA can be expanded with the introduction of exogenous ("external") variables.
 Finally, ARIMA and SARIMA are part of a family of models called **Box-Jenkins** models.
 
-
+--- 
 #### 2.2.4 AutoRegressive Conditional Heteroscedasticity (ARCH) Models
 A completely different approach to time series consists in focusing on their time-varying variance, or **volatility**.
 An ARCH model is defined by a couple of euqations and by an order $p$:
@@ -218,6 +235,61 @@ In practice, it means that for long-term analysis fluctuations are almost comple
 This complex behavior is the reason why ARCH models are suited for dealing for financial time series.
 
 A Generalized version of ARCH models (GARCH), also links $\sigma_t^2$ to its (weighted) previous values $\sigma_{t-j}^2$.
+
+
+--- 
+
+---
+
+### 2.3 Machine Learning Architectures
+
+In the following subsection, modern Machine Learning approaches are introduced. \
+In fact, only the idea of the structure is provided. \
+The main algorithm for training such models is backpropagation via Stochastic Gradient Descent.
+
+---
+
+#### 2.3.1 Fully Connected Neural Networks
+Ok, I am joking. No need to explain NN.
+
+--- 
+
+#### (True) 2.3.1 Recurrent Neural Networks (RNN)
+Any RNN block starts with an initial memory ($H_0$), which at first is typically a zero-array. \
+The RNN block takes in the first input $x_1$ along with the initial hidden state $H_0$, producing an output $o_1$ and a hidden state $H_1$. \
+To process the second element in the sequence, the same RNN block takes in the hidden state from 
+the previous timestep $H_1$ and the input at the current timestep $x_2$, producing the output at the second timestep $o_2$ and a new hidden state $H_2$. \
+This process continues until we reach the end of 
+the sequence. At the end, an RNN outputs a value for each timestep and a final hidden state.
+
+The updated equations are the following:
+$$
+\begin{cases}
+    H_t = \tanh \big(\mathbf{W} H_{t-1} + \mathbf{U} x_t + b_1\big) \\
+    o_t = \mathbf{V} H_t + b_2
+\end{cases}
+$$
+
+Is used also a specific kind of backpropagation called **Back Propagation Through Time** (BPTT).
+
+![RNN structure](./img/rnn_structure.png)
+
+---
+
+#### 2.3.2 Long Short-Term Memory (LSTM) Networks
+
+--- 
+#### 2.3.3 Gated Recurrent Units (GRU) Networks
+
+---
+#### 2.3.4 Temporal Convolutional Networks (TCN)
+
+---
+#### 2.3.5 Neural Basis Expansion Analysis (N-BEATS)
+
+---
+#### 2.3.6 Neural Hierarchical Interpolation for Time Series Forecasting (NHITS)
+
 
 
 
