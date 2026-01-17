@@ -1,8 +1,38 @@
 # An introduction to Time Series
 
+## 0. Introduction 
 The scope of this file is to introduce the reader to the main characteristics of Time Series and their Analysis. \
 In Section 1, an introduction to some basic concepts is presented; in Section 2, some classic statistical models and modern machine learning architectures for Time Series are proposed.
 Most of the information in Chapter 1 comes from "*Time Series Analysis and Its Applications*", *R. H. Shumway, D. S. Stoffer, Springer, 2016*. For the statistical models, information is taken from "*Applied Time Series Analysis and Forecasting with Python*", *Huang, C., Petukhina, A., Springer, 202.*; Machine learning architectures descriptions are references to "*Modern Time Series Forecasting Using Python*", *Joseph, M., Tackes, J., Packt, 2024*.
+
+### 0.1 Table of Contents
+<!-- TOC -->
+* [An introduction to Time Series](#an-introduction-to-time-series)
+  * [0. Introduction](#0-introduction-)
+    * [0.1 Table of Contents](#01-table-of-contents)
+  * [1. Basic Concepts](#1-basic-concepts)
+    * [1.1 Measures of Dependence](#11-measures-of-dependence)
+    * [1.2 Stationarity](#12-stationarity)
+    * [1.3 Time Series Decomposition](#13-time-series-decomposition)
+  * [2. Classic Time Series models](#2-classic-time-series-models)
+    * [2.1 Simple time series generators](#21-simple-time-series-generators)
+      * [2.1.1 White Noise](#211-white-noise)
+      * [2.1.2 Moving Average (MA) Models](#212-moving-average-ma-models)
+      * [2.1.3 Autoregressive (AR) Models](#213-autoregressive-ar-models)
+    * [2.2 Classical Methods](#22-classical-methods)
+      * [2.2.1 Autoregressive Moving Average (ARMA) Models](#221-autoregressive-moving-average-arma-models)
+      * [2.2.2 AR - Integrated - MA (ARIMA) Models](#222-ar---integrated---ma-arima-models)
+      * [2.2.3 Seasonal - ARIMA (SARIMA) Models](#223-seasonal---arima-sarima-models)
+      * [2.2.4 AutoRegressive Conditional Heteroscedasticity (ARCH) Models](#224-autoregressive-conditional-heteroscedasticity-arch-models)
+    * [2.3 Machine Learning Architectures](#23-machine-learning-architectures)
+      * [2.3.1 Fully Connected Neural Networks](#231-fully-connected-neural-networks)
+      * [(True) 2.3.1 Recurrent Neural Networks (RNN)](#true-231-recurrent-neural-networks-rnn)
+      * [2.3.2 Long Short-Term Memory (LSTM) Networks](#232-long-short-term-memory-lstm-networks)
+      * [2.3.3 Gated Recurrent Units (GRU) Networks](#233-gated-recurrent-units-gru-networks)
+      * [2.3.4 Neural Basis Expansion Analysis (N-BEATS)](#234-neural-basis-expansion-analysis-n-beats)
+      * [2.3.5 Neural Hierarchical Interpolation for Time Series Forecasting (NHITS)](#235-neural-hierarchical-interpolation-for-time-series-forecasting-nhits)
+      * [2.3.6 Other architectures](#236-other-architectures)
+<!-- TOC -->
 
 ---
 
@@ -272,23 +302,100 @@ $$
 
 Is used also a specific kind of backpropagation called **Back Propagation Through Time** (BPTT).
 
-![RNN structure](./img/rnn_structure.png)
+![RNN Block structure](./img/rnn_structure.png)
 
 ---
 
 #### 2.3.2 Long Short-Term Memory (LSTM) Networks
+A LSTM network is a special kind of RNN. \
+The idea is to add a new layer of information, a "long-term memory", in addition to the classical hidden state presented by RNNs.
+
+A block is made up by three gates:
+- *Input gate*: This gate decides how much information to read from the current input and previous hidden state (short-term memory). The update equation for this is: 
+$$
+    I_t = \sigma (W_{xi}) x_t + W_{hi} H_{t-1} + b_i
+$$
+- *Forget gate*: Decides how much information to forget from long-term memory:
+$$
+    F_t = \sigma (W_{xf}) x_t + W_{hf} H_{t-1} + b_f
+$$
+- *Output gate*: Decides how much of the current cell state should be used to create the current hidden state, which is the output of the cell:
+$$
+    O_t = \sigma (W_{xo}) x_t + W_{ho} H_{t-1} + b_o
+$$
+
+These gates compose a kind of "short-term memory". \
+A long-term memory, or *cell state* $C_t$, is instead updated as:
+$$
+\begin{align}
+    \tilde{C}_t &= \tanh (W_{xc} x_t + W_{hc} H_{t-1} + b_c) \\
+    C_t &= F_t \odot C_{t-1} + I_t \odot \tilde{C}_t \\
+    H_t &= O_t \odot \tanh (C_t) 
+\end{align}
+$$
+The second equation above has the meaning of decide how much information to carry forward ($F \odot C$), and how much of the current information to write into the long-term memory ($I \odot \tilde{C}$).
+
+![LSTM Block stucture](./img/lstm_structure.png)
+
 
 --- 
 #### 2.3.3 Gated Recurrent Units (GRU) Networks
+GRU networks take inspiration from RNN and LSTM ones, simplifying the workflow a bit. \
+Practically, they are like LSTM networks, but without a Long-Term memory cell: the information is only passed through the hidden state!
+
+As for LSTM, there exist some gates:
+- *Reset Gate*: Decides how much of the previous hidden state will be considered as a temporary ("candidate") hidden state of the current timestep.
+$$
+    R_t = \sigma (W_{xr} x_t + W_{hr} H_{t-1} + b_r)
+$$
+- *Update Gate*: Decides how much of the previous hidden state and of the temporary one will be carried forward:
+$$
+    U_t = \sigma (W_{xu} x_t + W_{hu} H_{t-1} + b_u)
+$$
+
+The hidden state is then updated, similarly as for LSTMs:
+$$
+\begin{align}
+    \tilde{H}_t &= \tanh (W_{xh} x_t + W_{hh} R_t \odot H_{t-1} + b_h) \\
+    H_t &= U_t \odot H_{t-1} + (1-U_t) \odot \tilde{H}_t
+\end{align}
+$$
+
+![GRU Block structure](./img/gru_structure.png)
 
 ---
-#### 2.3.4 Temporal Convolutional Networks (TCN)
+#### 2.3.4 Neural Basis Expansion Analysis (N-BEATS)
+N-BEATS is a kind of "Frankenstein" model, mixing tools both from statistics and machine learning. \
+NBEATS architecture is pretty complex, so here only an idea is provided
+
+The architecture is built by three levels :
+- *Blocks*: Are the lower, most granular, level. Each block, given an input, returns a *forecast* (future prediction) and a *backcast* (explanation of what happened in the past). 
+- *Stack*: Are the middle level. Each stack processes the outputs of his inner blocks in a *residual manner*, i.e., its own input $x_l$ is a difference between a block input $x_{l-1}$ and a block backcast output $\hat{x_{l-1}}$. All the forecast outputs are instead summed in order to make the *stack forecast*. 
+- *Overall architecture*: is the high-level architecture. Its made up by $N$ stacks chained together; a stack residual is the input for the following stack, while the stack forecasts are summed together to get the final forecast prediction.
+
+In some way, all this architecture tries to decompose the time series signal into the common trend/seasonality/noise pattern.
+NBEATS can be possibly expanded by including exogenous variables, using Tempral Convolutional Networks and WaveNet network.
+
+![NBEATS architecture](./img/nbeats_structure.png)
 
 ---
-#### 2.3.5 Neural Basis Expansion Analysis (N-BEATS)
+#### 2.3.5 Neural Hierarchical Interpolation for Time Series Forecasting (NHITS)
+NHiTS is an evolution of NBEATS, specifically implemented for more stable long-horizon forecasting.
+
+Instead on focusing on tren and seasonality, N-HiTS main goal is to decompose the signal into multiple frequencies and forecast them separately. To do so, some improvements on NBEATS architecture have been proposed, including multi-rate data sampling and hierarchical interpolation.
+
+- *Multi-rate data sampling*: The signal is decomposed by different layers with different resolution through the use of sub-sampling layers: a first block looks at the input, let's say, every day, the following block looks at the first-block output every week, and so on... This is made possible thanks to the use of pooling layers with some kernel and stride.
+- *Hierarchical interpolation*: is a common interpolation of points over time. The idea is to lower the global output dimension (the final forecast) into a more granular dimension: if we want to have prediction for a high window of days in the future (let's say, 100) instead of forecasting 100 values one for each day we forecast just 10 of them, one in 10 days, and then interpolates those values.
 
 ---
-#### 2.3.6 Neural Hierarchical Interpolation for Time Series Forecasting (NHITS)
+#### 2.3.6 Other architectures
+This part only proposes a list of many other modern architectures possibly used for time series forecasting:
+- Temporary Convolutional Networks
+- LTSF (Long-term Time Series Forecasting )
+- Transformer family: Autoformer, Informer, Pyraformer, LogTrans, iTransformer, Temporal Fusion Transformer (TFT)
+- TSMixer
+- Time Series Dense Encoder
+
 
 
 
