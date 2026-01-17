@@ -191,8 +191,6 @@ If the sum of an AR model's weights is finite, then the model is called *causal*
 
 ---
 
----
-
 ### 2.2 Classical Methods
 The following subsection presents improved classical models that combine in different (but similar) ways the concepts previously introduced.
 A brief description of the models' properties is provided, but not proved, as well.
@@ -217,11 +215,11 @@ Properties:
 ---
 
 #### 2.2.2 AR - Integrated - MA (ARIMA) Models
-ARIMA models have the same flavor of ARMA ones and become relevant once a time series shows some kind of trend. 
+ARIMA models have the same flavor of ARMA ones and become relevant once a time series shows some kind of trend.
 
 The idea of ARIMA models is to remove the trend from the samples to make the model stationary. Than, all the techniques applicable to ARMA are allowed. \
 To capture trend, ARIMA looks at short-term (linear) correlations. \
-In practice ARIMA models simply differentiate across consecutive points up to some degree $d$. This allows removing a polynomial trend of degree $d$ from the data. \
+In practice ARIMA models simply differentiate across consecutive points up to some degree $d$. This allows removing a polynomial trend of degree $d$ from the data.
 
 ARIMA models are specified by three orders $(p, d, q)$.
 
@@ -370,7 +368,7 @@ NBEATS architecture is pretty complex, so here only an idea is provided
 
 The architecture is built by three levels :
 - *Blocks*: Are the lower, most granular, level. Each block, given an input, returns a *forecast* (future prediction) and a *backcast* (explanation of what happened in the past).
-- *Stack*: Are the middle level. Each stack processes the outputs of his inner blocks in a *residual manner*, i.e., its own input $x_l$ is a difference between a block input $x_{l-1}$ and a block backcast output $\hat{x_{l-1}}$. All the forecast outputs are instead summed in order to make the *stack forecast*.
+- *Stack*: Are the middle level. Each stack processes the outputs of his inner blocks in a *residual manner*, i.e., its own input $x_l$ is a difference between a block input $x_{l-1}$ and a block backcast output $\hat{x}_{l-1}$. All the forecast outputs are instead summed in order to make the *stack forecast*.
 - *Overall architecture*: is the high-level architecture. Its made up by $N$ stacks chained together; a stack residual is the input for the following stack, while the stack forecasts are summed together to get the final forecast prediction.
 
 In some way, all this architecture tries to decompose the time series signal into the common trend/seasonality/noise pattern.
