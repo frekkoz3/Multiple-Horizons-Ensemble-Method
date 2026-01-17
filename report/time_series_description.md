@@ -1,6 +1,7 @@
 # An introduction to Time Series
 
-## 0. Introduction 
+## 0. Introduction
+
 The scope of this file is to introduce the reader to the main characteristics of Time Series and their Analysis. \
 In Section 1, an introduction to some basic concepts is presented; in Section 2, some classic statistical models and modern machine learning architectures for Time Series are proposed.
 Most of the information in Chapter 1 comes from "*Time Series Analysis and Its Applications*", *R. H. Shumway, D. S. Stoffer, Springer, 2016*. For the statistical models, information is taken from "*Applied Time Series Analysis and Forecasting with Python*", *Huang, C., Petukhina, A., Springer, 202.*; Machine learning architectures descriptions are references to "*Modern Time Series Forecasting Using Python*", *Joseph, M., Tackes, J., Packt, 2024*.
@@ -39,35 +40,41 @@ Most of the information in Chapter 1 comes from "*Time Series Analysis and Its A
 ---
 
 ## 1. Basic Concepts
+
 A *Time Series* usually consists on a collection of adjacent points ${x_0, x_1, ...}$, indexed accordingly to the order they are obtained over time (${t_0, t_1, ...}$). \
 Usually, such points are treated as *random variables*, ${x_t}$, observed realizations of a *stochastic process*. \
 Many of time series are actually *continuous time series*, that are discretized and approximated by the observations (*discrete time parameter series*); an insufficient sampling rate leads to a critic phenomenon called *aliasing*.
 
 The act of answering mathematical and statistical problems about a given Time Series is called *Time Series Analysis*. \
-Two approaches for doing Time Series Analysis, different but not mutually exclusive, exist: the *time domain approach* investigates lagged relationships between data, while *frequency domain approach* deals with cycles or periods among data. 
+Two approaches for doing Time Series Analysis, different but not mutually exclusive, exist: the *time domain approach* investigates lagged relationships between data, while *frequency domain approach* deals with cycles or periods among data.
 
 Analysis techniques rely on some assumptions. One of them is that continuous time series can be specified in terms of some finite-dimensional distribution functions, allowing to ... [TODO].
 
 ---
+
 ### 1.1 Measures of Dependence
+
 A classic assumption in statistical inference is that data sampled are *independent and identically distributed* (*iid*); in time series analysis such assumption is clearly impossible to hold, since data collected over time usually share some properties, thus leading to *dependence*. \
 There exists a variety of measures of dependence:
-- The **mean function**, defined as
+
+* The **mean function**, defined as
+
 $$
     \mu_{x_t} = \mathbb{E}[x_t] = \int_{-\infty}^{+ \infty} x f_t(x) dx
 $$
-- The **autocovariance function**, defined as 
+
+* The **autocovariance function**, defined as
 $$
-    \gamma_X(s, t) = \mathbb{C}(x_s, x_t) = \mathbb{E}[(x_s - \mu_s)(x_t - \mu_t)],    
-$$
-provides a measure of *linear* dependence among two points $x_s$ and $x_t$ of the same time series $X$; smooth series exhibit high autocovariance values even for far $t, s$, while choppier series tend to have autocovariance values nearly zero for most of the $(s, t)$ pairs. Autocovariance reduces to *variance* in the case of $s = t$.
-- The **autocorrelation function**, defined as
+    \gamma_X(s, t) = \mathbb{C}(x_s, x_t) = \mathbb{E}[(x_s - \mu_s)(x_t - \mu_t)],
+$$provides a measure of *linear* dependence among two points $x_s$ and $x_t$ of the same time series $X$; smooth series exhibit high autocovariance values even for far $t, s$, while choppier series tend to have autocovariance values nearly zero for most of the $(s, t)$ pairs. Autocovariance reduces to *variance* in the case of $s = t$.
+
+* The **autocorrelation function**, defined as
 $$ \rho(s, t) = \frac{\gamma (s, t)}{\sqrt{\gamma (s, s) \gamma (t, t)}},$$
 is a measure for the linear predictability of the series at time t, $x_t$, using only the value $x_s$.
 
 Some dependence can also be shown by two or more different time series. Think, e.g., to some measures of soil temperature and soil humidity: clearly, if the temperature is high, we expect the soil to by drier, i.e., showing low humidity. \
 In such cases can be used two slight modifications of the measures yet introduced:
-- The **cross-covariance function**, between two series $X$ and $Y$, is defined as 
+- The **cross-covariance function**, between two series $X$ and $Y$, is defined as
 $$\gamma_{XY}(s, t) = \mathbb{C}[x_s, y_t] = \mathbb{E}[(x_s - \mu_{Xs})(y_t - \mu_{Yt})]$$
 - The **cross-correlation function** is instead given by
 $$\rho_{X, Y}(s, t) = \frac{\gamma_{XY}(s, t)}{\sqrt{\gamma_X (s, s) \gamma_Y (t, t)}}$$
@@ -91,11 +98,11 @@ If a time series is weakly stationary, (or, in the following, simply stationary)
 The concept of (weak) stationarity forms the basis of many analysis procedures.
 
 ---
+
 ### 1.3 Time Series Decomposition
 Time Series usually show **trends** $\mathbf{T}$, i.e., they tend to increase or decrease over time, and/or **seasonalities** $\mathbf{S}$, i.e., they tend to have a repeated pattern over time.
 These two elements are the so-called *deterministic components* of a Time Series and can be extracted through a *decomposition* process.
 What remains after such a decomposition is a *random component*, $\mathbf{R}$, non-deterministic and so usually referred to as "white noise". \
-
 
 >⚠️️️ ️Note that if a Time Series shows a trend or a seasonality, it means that the mean and the variance are shifting over time: the Time Series is **non-stationary**!⚠️️️
 
@@ -117,15 +124,9 @@ $$
 
 ---
 
----
-
----
-
 ## 2. Classic Time Series models
 The following section discusses peculiarities of the most-widely used classic models used for describing and analyzing time series. \
 Subsection 2.1 introduces very basilar models, while Subsection 2.2 describes some more complex statistical structures. Subsection 2.3 presents more recent models, developed in the machine learning field.
-
----
 
 ---
 
@@ -214,6 +215,7 @@ Properties:
 > ⚠️ For building a model given the samples, these **should be stationary** (use some checks, e.g. `statmodels.tsa.stattools.adfuller` method). If not, use models like the following. ⚠️
 
 ---
+
 #### 2.2.2 AR - Integrated - MA (ARIMA) Models
 ARIMA models have the same flavor of ARMA ones and become relevant once a time series shows some kind of trend. 
 
@@ -230,7 +232,8 @@ $$.
 
 Once derived the elements, the new time series $Y$ becomes an ARMA(p, q).
 
---- 
+---
+
 #### 2.2.3 Seasonal - ARIMA (SARIMA) Models
 SARIMA models allow the tractability of time series showing some kind of seasonality.
 The idea of SARIMA is someway similar to the ARIMA one: we want to explicitate some relationship between data "at the same period of the seasonality", e.g., linking temperature of Jan '26 to Jan '25.
@@ -245,7 +248,8 @@ $$
 Both ARIMA and SARIMA can be expanded with the introduction of exogenous ("external") variables.
 Finally, ARIMA and SARIMA are part of a family of models called **Box-Jenkins** models.
 
---- 
+---
+
 #### 2.2.4 AutoRegressive Conditional Heteroscedasticity (ARCH) Models
 A completely different approach to time series consists in focusing on their time-varying variance, or **volatility**.
 An ARCH model is defined by a couple of euqations and by an order $p$:
@@ -266,9 +270,6 @@ This complex behavior is the reason why ARCH models are suited for dealing for f
 
 A Generalized version of ARCH models (GARCH), also links $\sigma_t^2$ to its (weighted) previous values $\sigma_{t-j}^2$.
 
-
---- 
-
 ---
 
 ### 2.3 Machine Learning Architectures
@@ -282,14 +283,14 @@ The main algorithm for training such models is backpropagation via Stochastic Gr
 #### 2.3.1 Fully Connected Neural Networks
 Ok, I am joking. No need to explain NN.
 
---- 
+---
 
 #### (True) 2.3.1 Recurrent Neural Networks (RNN)
 Any RNN block starts with an initial memory ($H_0$), which at first is typically a zero-array. \
 The RNN block takes in the first input $x_1$ along with the initial hidden state $H_0$, producing an output $o_1$ and a hidden state $H_1$. \
-To process the second element in the sequence, the same RNN block takes in the hidden state from 
+To process the second element in the sequence, the same RNN block takes in the hidden state from
 the previous timestep $H_1$ and the input at the current timestep $x_2$, producing the output at the second timestep $o_2$ and a new hidden state $H_2$. \
-This process continues until we reach the end of 
+This process continues until we reach the end of
 the sequence. At the end, an RNN outputs a value for each timestep and a final hidden state.
 
 The updated equations are the following:
@@ -337,8 +338,7 @@ The second equation above has the meaning of decide how much information to carr
 
 ![LSTM Block stucture](./img/lstm_structure.png)
 
-
---- 
+---
 #### 2.3.3 Gated Recurrent Units (GRU) Networks
 GRU networks take inspiration from RNN and LSTM ones, simplifying the workflow a bit. \
 Practically, they are like LSTM networks, but without a Long-Term memory cell: the information is only passed through the hidden state!
@@ -369,8 +369,8 @@ N-BEATS is a kind of "Frankenstein" model, mixing tools both from statistics and
 NBEATS architecture is pretty complex, so here only an idea is provided
 
 The architecture is built by three levels :
-- *Blocks*: Are the lower, most granular, level. Each block, given an input, returns a *forecast* (future prediction) and a *backcast* (explanation of what happened in the past). 
-- *Stack*: Are the middle level. Each stack processes the outputs of his inner blocks in a *residual manner*, i.e., its own input $x_l$ is a difference between a block input $x_{l-1}$ and a block backcast output $\hat{x_{l-1}}$. All the forecast outputs are instead summed in order to make the *stack forecast*. 
+- *Blocks*: Are the lower, most granular, level. Each block, given an input, returns a *forecast* (future prediction) and a *backcast* (explanation of what happened in the past).
+- *Stack*: Are the middle level. Each stack processes the outputs of his inner blocks in a *residual manner*, i.e., its own input $x_l$ is a difference between a block input $x_{l-1}$ and a block backcast output $\hat{x_{l-1}}$. All the forecast outputs are instead summed in order to make the *stack forecast*.
 - *Overall architecture*: is the high-level architecture. Its made up by $N$ stacks chained together; a stack residual is the input for the following stack, while the stack forecasts are summed together to get the final forecast prediction.
 
 In some way, all this architecture tries to decompose the time series signal into the common trend/seasonality/noise pattern.
@@ -395,8 +395,3 @@ This part only proposes a list of many other modern architectures possibly used 
 - Transformer family: Autoformer, Informer, Pyraformer, LogTrans, iTransformer, Temporal Fusion Transformer (TFT)
 - TSMixer
 - Time Series Dense Encoder
-
-
-
-
-
