@@ -9,6 +9,8 @@ from tqdm import tqdm
 
 import xgboost as xgb
 
+import json
+
 
 class DirectModel:
     """
@@ -49,17 +51,27 @@ class DirectModel:
 
 
 class TCN(nn.Module, DirectModel):
-    def __init__(self, window: int, horizon: int, n_layers: int, inner_layers_dim: list[int],
-                 kernel_size: list[int], stride: int, padding: int, activation: str,
-                 learning_rate: float, n_epochs: int, batch_size : int, device: str):
+    def __init__(self, file_path: str):
+        with open(file_path, 'r') as file:
+            config = json.load(file)
+
+        self.window = config['window']
+        self.horizon = config['horizon']
+
+        inner_layers_dim = config['inner_layers_dim']
+        kernel_size = config['kernel_size']
+        stride = config['stride']
+        padding = config['padding']
+
+        self.n_epochs = config['n_epochs']
 
         nn.Module.__init__(self)
         DirectModel.__init__(self, window, horizon)
 
-        self.device = device
-        self.n_epochs = n_epochs
-        self.batch_size = batch_size
-        self.activation = getattr(f, activation)
+        self.device = config['device']
+        self.n_epochs = config['n_epochs']
+        self.batch_size = config['batch_size']
+        self.activation = getattr(f, config['activation'])
         self.loss = nn.MSELoss()
 
         self.conv_layers = nn.ModuleList()
@@ -71,7 +83,7 @@ class TCN(nn.Module, DirectModel):
             stride=stride,
             padding=padding
         ))
-        for i in range(n_layers - 1):
+        for i in range(config['n_layers'] - 1):
             self.conv_layers.append(nn.Conv1d(
                 in_channels=inner_layers_dim[i],
                 out_channels=inner_layers_dim[i+1],
@@ -86,13 +98,13 @@ class TCN(nn.Module, DirectModel):
             stride=stride,
             padding=padding
         ))
-
         # Features of the last timestamp to the horizon
         self.readout = nn.Linear(inner_layers_dim[-1], horizon)
 
-        # Initialize Optimizer
+        self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
+
         self.to(self.device)
-        self.optim = torch.optim.Adam(self.parameters(), lr=learning_rate)
+
 
     def forward(self, x):
         for conv_layer in self.conv_layers:
@@ -106,7 +118,7 @@ class TCN(nn.Module, DirectModel):
         y_tensor = torch.tensor(y, dtype=torch.float32).to(self.device)
 
         dataset = TensorDataset(X_tensor, y_tensor)
-        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        loader = DataLoader(dataset, batch_size=int(self.batch_size.item()), shuffle=False)
 
         self.train()
 
@@ -154,15 +166,21 @@ class TCN(nn.Module, DirectModel):
 
 
 class XGBoost(DirectModel):
-    def __init__(self, window: int, horizon: int, n_estimators: int, max_depth: int, learning_rate: float, device: str):
-        super().__init__(window, horizon)
+    def __init__(self, file_path: str):
+        with open(file_path, 'r') as file:
+            config = json.load(file)
+
+        self.window = config['window']
+        self.horizon = config['horizon']
+
+        super().__init__(self.window, self.horizon)
 
         self.reg = xgb.XGBRegressor(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
+            n_estimators=config["n_estimators"],
+            max_depth=config["max_depth"],
+            learning_rate=config["learning_rate"],
             tree_method="hist",
-            device=device if device == 'cuda' else None
+            device=config["device"] if config["device"] == 'cuda' else None
         )
 
     def fit(self, X: np.ndarray, y: np.ndarray):
@@ -171,52 +189,3 @@ class XGBoost(DirectModel):
 
     def predict(self, X: np.ndarray):
         return self.reg.predict(X)
-
-
-
-if __name__ == "__main__":
-    # Simple test of the TCN model
-    window = 24
-    horizon = 12
-    n_samples = 1000
-
-    # Generate random data
-    X = np.random.rand(n_samples, window)
-    y = np.random.rand(n_samples, horizon)
-
-    # Initialize and train TCN model
-    tcn_model = TCN(
-        window=window,
-        horizon=horizon,
-        n_layers=3,
-        inner_layers_dim=[16, 32],
-        kernel_size=[3, 3, 3],
-        stride=1,
-        padding=1,
-        activation='relu',
-        learning_rate=0.001,
-        n_epochs=50,
-        device='cpu'
-    )
-
-    tcn_model.fit(X, y)
-    y_pred = tcn_model.predict(X)
-
-    print("TCN Prediction Shape:", y_pred.shape)
-
-    # Initialize and train XGBoost model
-    xgb_model = XGBoost(
-        window=window,
-        horizon=horizon,
-        n_estimators=100,
-        max_depth=5,
-        learning_rate=0.1,
-        device='cpu'
-    )
-
-    xgb_model.fit(X, y)
-    y_pred_xgb = xgb_model.predict(X)
-
-    print("XGBoost Prediction Shape:", y_pred_xgb.shape)
-
-    print("Predictions:", y_pred, y_pred_xgb)
