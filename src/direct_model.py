@@ -209,8 +209,16 @@ class XGBoost(DirectModel):
         )
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        self.reg.fit(X, y)
-        return np.mean((self.reg.predict(X) - y) ** 2)
+        self.reg.fit(X, y, eval_set=[(X, y)], verbose=False)
+        # Access the history
+        results = self.reg.evals_result()
+
+        # 'validation_0' is the name assigned to the first item in eval_set
+        # 'rmse' is the default metric for reg:squarederror (Root MSE)
+        # XGBoost typically tracks RMSE, so we square it to get MSE
+        final_rmse = results['validation_0']['rmse'][-1]
+
+        return final_rmse ** 2
 
     def predict(self, X: np.ndarray):
         return self.reg.predict(X)
@@ -227,3 +235,7 @@ class XGBoost(DirectModel):
         """
         self.reg.save_model(file_path)
         return
+
+
+if __name__ == '__main__':
+    pass
