@@ -18,9 +18,12 @@ class DirectModel:
     For now, a Temporary Convolutional Neural Network is used as the underlying model.
     """
 
-    def __init__(self, window : int, horizon : int):
-        self.window = window
-        self.horizon = horizon
+    def __init__(self, config_path: str):
+        with open(config_path, 'r') as file:
+            config = json.load(file)
+
+        self.window = config["window"]
+        self.horizon = config["horizon"]
 
 
     def fit(self, X : np.ndarray, y : np.ndarray):
@@ -52,6 +55,8 @@ class DirectModel:
 
 class TCN(nn.Module, DirectModel):
     def __init__(self, file_path: str):
+        nn.Module.__init__(self)
+
         with open(file_path, 'r') as file:
             config = json.load(file)
 
@@ -64,9 +69,6 @@ class TCN(nn.Module, DirectModel):
         padding = config['padding']
 
         self.n_epochs = config['n_epochs']
-
-        nn.Module.__init__(self)
-        DirectModel.__init__(self, window, horizon)
 
         self.device = config['device']
         self.n_epochs = config['n_epochs']
@@ -99,7 +101,7 @@ class TCN(nn.Module, DirectModel):
             padding=padding
         ))
         # Features of the last timestamp to the horizon
-        self.readout = nn.Linear(inner_layers_dim[-1], horizon)
+        self.readout = nn.Linear(inner_layers_dim[-1], self.horizon.item())
 
         self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
@@ -112,6 +114,7 @@ class TCN(nn.Module, DirectModel):
         x = x[:, :, -1]
         x = self.readout(x)
         return x
+
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         X_tensor = torch.tensor(X, dtype=torch.float32).unsqueeze(1).to(self.device)
@@ -167,13 +170,13 @@ class TCN(nn.Module, DirectModel):
 
 class XGBoost(DirectModel):
     def __init__(self, file_path: str):
+        super().__init__(file_path)
+
         with open(file_path, 'r') as file:
             config = json.load(file)
 
         self.window = config['window']
         self.horizon = config['horizon']
-
-        super().__init__(self.window, self.horizon)
 
         self.reg = xgb.XGBRegressor(
             n_estimators=config["n_estimators"],
