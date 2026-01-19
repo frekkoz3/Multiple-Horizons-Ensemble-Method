@@ -6,9 +6,6 @@ __pycache__
 # Notebook related
 .ipynb_checkpoints
 
-# Module related
-setup.py
-
 # Virtual environment
 .venv
 venv
