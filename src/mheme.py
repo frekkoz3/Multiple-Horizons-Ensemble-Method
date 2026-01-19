@@ -1,4 +1,4 @@
-from direct_model import *
+from src.direct_model import *
 import numpy as np
 
 def autoregressive_prediction(model : DirectModel, total_horizon : int, X : np.ndarray):

@@ -1,5 +1,10 @@
 # Python related
 __pycache__
+*.py[cod]
+*.pyo
+
+# Notebook related
+.ipynb_checkpoints
 
 # Virtual environment
 .venv

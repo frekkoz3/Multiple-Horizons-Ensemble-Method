@@ -84,11 +84,11 @@ class TCN(nn.Module, DirectModel):
             stride=stride,
             padding=padding
         ))
-        for i in range(config['n_layers'] - 1):
+        for i in range(config['n_layers'] - 2):
             self.conv_layers.append(nn.Conv1d(
                 in_channels=inner_layers_dim[i],
                 out_channels=inner_layers_dim[i+1],
-                kernel_size=kernel_size[i+1],
+                kernel_size=kernel_size[i],
                 stride=stride,
                 padding=padding
             ))
@@ -119,8 +119,12 @@ class TCN(nn.Module, DirectModel):
         X_tensor = torch.tensor(X, dtype=torch.float32).unsqueeze(1).to(self.device)
         y_tensor = torch.tensor(y, dtype=torch.float32).to(self.device)
 
+        print("Starting TCN training...")
+
         dataset = TensorDataset(X_tensor, y_tensor)
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+
+        print("Training TCN model...")
 
         self.train()
 
@@ -129,7 +133,12 @@ class TCN(nn.Module, DirectModel):
         for epoch in epoch_iterator:
             epoch_loss = 0.0
 
+            print(f"Epoch {epoch+1}/{self.n_epochs}")
+
             for batch_X, batch_y in loader:
+
+                print("Processing new batch...")
+
                 # Move batch to device
                 batch_X = batch_X.to(self.device)
                 batch_y = batch_y.to(self.device)
@@ -152,8 +161,10 @@ class TCN(nn.Module, DirectModel):
             avg_loss = epoch_loss / len(dataset)
 
             # Update progress bar every 10 epochs
-            if (epoch + 1) % 10 == 0:
-                epoch_iterator.set_postfix(loss=f"{avg_loss:.4f}")
+            # if (epoch + 1) % 10 == 0:
+            #    epoch_iterator.set_postfix(loss=f"{avg_loss:.4f}")
+
+            print(f"Epoch {epoch+1}/{self.n_epochs}, Loss: {avg_loss:.4f}")
 
         return avg_loss
 
@@ -165,6 +176,18 @@ class TCN(nn.Module, DirectModel):
             y_hat = self(X_tensor)
         return y_hat.cpu().numpy() # Move back to CPU
 
+    def save_model(self, file_path: str):
+        """
+        Save the model's state dictionary to the specified file path.
+
+        Params:
+        - file_path : str
+
+        Returns:
+        - None
+        """
+        torch.save(self.state_dict(), file_path)
+        return
 
 
 class XGBoost(DirectModel):
@@ -191,3 +214,16 @@ class XGBoost(DirectModel):
 
     def predict(self, X: np.ndarray):
         return self.reg.predict(X)
+
+    def save_model(self, file_path: str):
+        """
+        Save the model to the specified file path.
+
+        Params:
+        - file_path : str
+
+        Returns:
+        - None
+        """
+        self.reg.save_model(file_path)
+        return
