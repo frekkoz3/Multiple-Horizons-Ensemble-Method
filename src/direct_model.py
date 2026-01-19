@@ -100,7 +100,7 @@ class TCN(nn.Module, DirectModel):
             padding=padding
         ))
         # Features of the last timestamp to the horizon
-        self.readout = nn.Linear(inner_layers_dim[-1], self.horizon.item())
+        self.readout = nn.Linear(inner_layers_dim[-1], self.horizon)
 
         self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
@@ -120,7 +120,7 @@ class TCN(nn.Module, DirectModel):
         y_tensor = torch.tensor(y, dtype=torch.float32).to(self.device)
 
         dataset = TensorDataset(X_tensor, y_tensor)
-        loader = DataLoader(dataset, batch_size=int(self.batch_size.item()), shuffle=False)
+        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
 
         self.train()
 
