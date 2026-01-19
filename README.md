@@ -31,3 +31,14 @@ The proposed method is evaluated on standard time series datasets and compared a
 ## License
 
 MIT License
+
+## Quick setup
+
+```bash
+    python -m venv .venv
+    .\.venv\Scripts\activate
+    pip install -r requirements.txt
+    pip install -e .
+    nbdime config-git --enable
+    git lfs install
+```
