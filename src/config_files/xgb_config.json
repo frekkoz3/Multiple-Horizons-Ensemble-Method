@@ -1,0 +1,9 @@
+{
+    "window": 24,
+    "horizon": 12,
+
+    "n_estimators": 1,
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "device" : "cpu"
+}
