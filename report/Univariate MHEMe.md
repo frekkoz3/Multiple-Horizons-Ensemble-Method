@@ -92,6 +92,19 @@ This produces the final prediction vector
 
 ## Implementation
 
+In this section we discuss about the actual implementation.\
+We present:
+
+- The direct model we decided to use
+- How we compute the weights (both how to compute the variance and what data are used in order to compute them)
+- What benchmarks have beeen selected to evaluate the model
+
+### Direct model
+
+### Weights computation
+
+### Benchmarks
+
 ---
 
 ## Details
