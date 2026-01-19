@@ -9,7 +9,7 @@ class UMHEMe:
 
     def fit(self, X, y):
         """
-            Fit based on the error committed by predicting y_hat using X as input.
+            Fit the whole ensemble method. 
 
             Params : 
             - X : input of size self.window 

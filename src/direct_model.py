@@ -11,11 +11,11 @@ class DirectModel:
             Fit based on the error committed by predicting y_hat using X as input.
 
             Params : 
-            - X : input of size self.window 
-            - y : ground truth of size self.horizon
+            - X : input of size batch x self.window 
+            - y : ground truth of size batch x self.horizon
 
             Returns : 
-            - eps : errors committed during the prediction
+            - eps : errors committed during the prediction of size batch x self.horizon
         """
         pass
 
@@ -24,9 +24,9 @@ class DirectModel:
             Predict y_hat using X as input.
 
             Params : 
-            - X : input of size self.window 
+            - X : input of size batch x .window 
 
             Return:
-            - y_hat : output of size self.horizon
+            - y_hat : output of size batch x self.horizon
         """
         pass
