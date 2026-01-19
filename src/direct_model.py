@@ -20,7 +20,6 @@ class DirectModel:
         self.window = window
         self.horizon = horizon
 
-
     def fit(self, X : np.ndarray, y : np.ndarray):
         """
             Fit based on the error committed by predicting y_hat using X as input.
