@@ -37,8 +37,6 @@ Most of the information in Chapter 1 comes from "*Time Series Analysis and Its A
 
 ---
 
----
-
 ## 1. Basic Concepts
 
 A *Time Series* usually consists on a collection of adjacent points ${x_0, x_1, ...}$, indexed accordingly to the order they are obtained over time (${t_0, t_1, ...}$). \
