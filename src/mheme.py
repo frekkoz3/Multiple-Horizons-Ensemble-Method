@@ -38,10 +38,10 @@ def autoregressive_prediction(model : DirectModel, total_horizon : int, X : np.n
 
 class UMHEMe:
 
-    def __init__(self, window : int, horizon : int, model_class : DirectModel):
+    def __init__(self, horizon, window, model_class : DirectModel, config_path : str):
         self.horizon = horizon
         self.window = window
-        self.models = [model_class(window, h) for h in range(1, horizon + 1)]
+        self.models = [model_class(config_path) for h in range(1, horizon + 1)]
         self.weights = np.ones(shape = (self.horizon, self.horizon)) # n_models x horizon
 
     def fit(self, X, y):
