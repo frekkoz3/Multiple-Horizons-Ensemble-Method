@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state: int | None = None):
     """
@@ -23,6 +24,7 @@ def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tu
     n = X.shape[0]
 
     if shuffle:
+        assert random_state is not None, "if data are shuffled, random_state must be initialized"
         rng = np.random.default_rng(random_state)
         idx = rng.permutation(n)
         X = X[idx]
@@ -44,7 +46,7 @@ def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tu
 
 def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 1):
     """
-    Split a 1D time series into sliding windows of size window + horizon.
+    Split a 1D time series into sliding windows of size (window + horizon).
     Each window produces (X, y) with length `window` and `horizon` respectively.
     Windows are separated by lag `k`.
 
@@ -74,6 +76,85 @@ def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 
         y[i] = time_series[start + window : start + window + horizon]
 
     return X, y
+
+def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_path : str, proportions : tuple=(0.6, 0.2, 0.2), shuffled : bool = False, random_state : int | None = None) -> str :
+    """
+    Given a series and an index of the series among the whole dataset, returns the day (and possibly the hour) of the first element of the series.
+
+    Params:
+    - time_series : array of shape (window, ) or (horizon, )
+    - index : integer, index of the time_series in the dataset it belongs (train, validation, test)
+    - dataset : string, the file path to the dataset used.
+    - proportions : tuple of float, the proportions of train/val/test split used
+    - shuffled : boolean, True if during train_validation_test_split data were shuffled
+    - random_state : integer or None, random_state used for shuffling. Must be integer if shuffled is True
+
+    Returns:
+    - day : day and hour of the first element of the dataset
+    """
+
+    if shuffled:
+        assert random_state is not None, "if data are shuffled, is impossible to retrieve data day"
+        # TODO
+        raise NotImplementedError("Retrieving data day from index is not implemented for shuffled data.")
+
+    dataset = pd.read_csv(data_path)
+    n_samples = dataset.shape[0]
+
+    p_train, p_val, p_test = proportions
+    n_train = int(n_samples * p_train)
+    n_val   = int(n_samples * p_val)
+
+    if index < n_train:
+        real_index = index
+    elif index < n_train + n_val:
+        real_index = index + n_train
+    else:
+        real_index = index + n_train + n_val
+
+    print(real_index)
+
+    if 'traffic.csv' in data_path:    # if dataset 'traffic.csv', the target column is 'hours_from_start'
+        hours_from_start = dataset.iloc[real_index]['hours_from_start']
+        day = f"Day {hours_from_start // 24}, Hour {hours_from_start % 24}"
+    else:                              # else, other datasets have 'date' column as target
+        day = dataset.iloc[real_index]['date']
+
+    return day
+
+
+def data_loader(data_path : str, id_col :  str, id_target : str | int, target_col : str, date_col : str):
+    """
+    Load dataset from csv file and return the whole dataset and the target time series.
+
+    Params:
+    - data_path : string, path to the csv file
+    - id_col : string, name of the column containing the time series IDs
+    - id_target : string or int, ID of the target time series to be extracted
+    - target_col : string, name of the column containing the target values
+    - date_col : string, name of the column containing the date values
+
+    Returns:
+    - time_series : np.ndarray, array of shape (n_samples,) containing the target time series
+    - data : pd.DataFrame, dataframe containing the dataset
+    """
+    try:
+        data = pd.read_csv(data_path)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        raise
+
+    try:
+        target_series = data[data[id_col] == id_target].sort_values(date_col).set_index(date_col)
+        time_series = target_series[target_col]
+    except KeyError as e:
+        print(f"Error: {e}")
+        raise
+
+    return time_series , data
+
+
+
 
 if __name__ == '__main__':
     pass
