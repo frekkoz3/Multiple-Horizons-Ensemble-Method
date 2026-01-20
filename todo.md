@@ -6,6 +6,15 @@
 - [x] Define model to use
 - [x] Define variance (take inspiration from `./literature/readme.md`)
 - [x] **MHEMe (Univariate version) Python Implementation**
+
+
+
 - [ ] **MHEMe (Multivariate version) proposal** : what is it, what problem do we have, possible solutions
 - [ ] **MHEMe evaluation** : against other combination techniques, against other forecasting methods
+  - [ ] *MHEMe evaluation*
+  - [ ] *Direct Models evaluation*
+  - [ ] *MHEMe uniform weights evaluation*
+  - [ ] *ARIMA evaluation*
+  - [ ] *SARIMA evaluation*
+
 - [ ] **MHEMe presentation** : final presentation of the project (intro to time series, theory behind MHEMe, implementation and results, future ideas)
