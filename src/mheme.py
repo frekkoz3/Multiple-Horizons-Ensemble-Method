@@ -1,5 +1,8 @@
-from src.direct_model import *
+from src.direct_models import *
 import numpy as np
+
+import pickle
+
 
 def autoregressive_prediction(model : DirectModel, total_horizon : int, X : np.ndarray):
     """
@@ -42,7 +45,7 @@ class UMHEMe:
     def __init__(self, horizon, window, model_class : DirectModel, config_path : str):
         self.horizon = horizon
         self.window = window
-        self.models = [model_class(config_path) for h in range(1, horizon + 1)]
+        self.models = [model_class(config_path, horizon=h) for h in range(1, horizon + 1)]
         self.weights = np.ones(shape = (self.horizon, self.horizon)) # n_models x horizon
 
     def fit(self, X, y):
@@ -97,6 +100,51 @@ class UMHEMe:
         y_combined = num / den # set_size x total_horizon
 
         return y_combined
+
+    def save_model(self, model_path : str):
+        """
+        Save the whole ensemble model to disk.
+
+        Params:
+        - model_path : pickle path (path_to_model.pkl) where to save the model
+        """
+        assert model_path.endswith('.pkl'), "Model path must end with .pkl"
+        with open(model_path, 'wb') as f:
+            pickle.dump(self, f)
+        return
+
+
+    @staticmethod
+    def load_model(model_path : str):
+        """
+        Load the whole ensemble model from disk.
+
+        Params:
+        - model_path : pickle path (path_to_model.pkl) from where to load the model
+
+        Returns:
+        - UMHEMe instance
+        """
+        assert model_path.endswith('.pkl'), "Model must be a valid pickle file"
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+        return model
+
+
+    @staticmethod
+    def model_loss(y_true : np.ndarray, y_pred : np.ndarray) -> float:
+        """
+        Simply computing RMSE given a ground truth time series and prediction time series
+
+        Params:
+        - y_true : array of shape (horizon, ) containing ground truth values
+        - y_pred : array of shape (horizon, ) containing predicted values
+
+        Returns:
+        - rmse : float value representing the RMSE between y_true and y_pred
+        """
+        rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
+        return rmse
 
 if __name__ == '__main__':
     pass

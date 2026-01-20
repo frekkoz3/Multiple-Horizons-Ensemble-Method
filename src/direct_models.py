@@ -1,15 +1,16 @@
 import numpy as np
+from tqdm import tqdm
+import json
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as f
 from torch.utils.data import TensorDataset, DataLoader
 
-from tqdm import tqdm
-
 import xgboost as xgb
 
-import json
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 
 class DirectModel:
@@ -51,16 +52,27 @@ class DirectModel:
         """
         pass
 
+    def model_loss(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """
+        Compute the RMSE between ground truth and predictions.
+
+        Params:
+        - y_true : array of shape (horizon, ) containing ground truth values
+        - y_pred : array of shape (horizon, ) containing predicted values
+        """
+        rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
+        return rmse
+
 
 class TCN(nn.Module, DirectModel):
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, horizon :  int = None):
         nn.Module.__init__(self)
 
         with open(file_path, 'r') as file:
             config = json.load(file)
 
         self.window = config['window']
-        self.horizon = config['horizon']
+        self.horizon = config['horizon'] if horizon is None else horizon
 
         inner_layers_dim = config['inner_layers_dim']
         kernel_size = config['kernel_size']
@@ -124,20 +136,14 @@ class TCN(nn.Module, DirectModel):
         dataset = TensorDataset(X_tensor, y_tensor)
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
 
-        print("Training TCN model...")
-
         self.train()
 
-        epoch_iterator = tqdm(range(self.n_epochs), desc="Training TCN")
+        epoch_iterator = tqdm(range(self.n_epochs), desc=f"Training TCN - Horizon {self.horizon}")
 
         for epoch in epoch_iterator:
             epoch_loss = 0.0
 
-            print(f"Epoch {epoch+1}/{self.n_epochs}")
-
             for batch_X, batch_y in loader:
-
-                print("Processing new batch...")
 
                 # Move batch to device
                 batch_X = batch_X.to(self.device)
@@ -174,7 +180,8 @@ class TCN(nn.Module, DirectModel):
         self.eval()
         with torch.no_grad():
             y_hat = self(X_tensor)
-        return y_hat.cpu().numpy() # Move back to CPU
+        return y_hat.cpu().numpy()
+
 
     def save_model(self, file_path: str):
         """
@@ -191,14 +198,14 @@ class TCN(nn.Module, DirectModel):
 
 
 class XGBoost(DirectModel):
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, horizon : int = None ):
         super().__init__(file_path)
 
         with open(file_path, 'r') as file:
             config = json.load(file)
 
         self.window = config['window']
-        self.horizon = config['horizon']
+        self.horizon = config['horizon'] if horizon is None else horizon
 
         self.reg = xgb.XGBRegressor(
             n_estimators=config["n_estimators"],
@@ -235,6 +242,41 @@ class XGBoost(DirectModel):
         """
         self.reg.save_model(file_path)
         return
+
+
+class ARIMAModel(DirectModel):
+    def __init__(self, config_path: str):
+        super().__init__(config_path)
+        # Placeholder for ARIMA model parameters
+        self.order = (5, 1, 0)  # Example order, should be set based on config
+
+    def fit(self, X: np.ndarray, y: np.ndarray):
+        # Placeholder for fitting ARIMA model
+        # In practice, you would fit an ARIMA model to the data here
+        pass
+
+    def predict(self, X: np.ndarray):
+        # Placeholder for predicting with ARIMA model
+        # In practice, you would generate predictions using the fitted ARIMA model
+        pass
+
+
+class SARIMAModel(DirectModel):
+    def __init__(self, config_path: str):
+        super().__init__(config_path)
+        # Placeholder for SARIMA model parameters
+        self.order = (5, 1, 0)  # Example order, should be set based on config
+        self.seasonal_order = (1, 1, 1, 12)  # Example seasonal order
+
+    def fit(self, X: np.ndarray, y: np.ndarray):
+        # Placeholder for fitting SARIMA model
+        # In practice, you would fit a SARIMA model to the data here
+        pass
+
+    def predict(self, X: np.ndarray):
+        # Placeholder for predicting with SARIMA model
+        # In practice, you would generate predictions using the fitted SARIMA model
+        pass
 
 
 if __name__ == '__main__':
