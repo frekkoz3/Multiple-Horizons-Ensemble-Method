@@ -56,6 +56,38 @@ class DirectModel:
     def __str__(self):
         return f"class : {self.__class__}; horizon : {self.horizon}"
 
+def horizon_weighted_huber(
+    y_hat : np.ndarray,
+    y : np.ndarray,
+    w_decay : str = "uni",
+    delta=1.0
+):
+    h = y.shape[1]
+    if w_decay == "uni":
+        weights = torch.ones(h)
+    elif w_decay == "soft_lin":
+        weights = torch.linspace(1.0, 2.0, h)
+    elif w_decay == "strong_lin":
+        weights = torch.arange(1, h + 1)
+    elif w_decay == "exp":
+        gamma = 1.05  # >1 emphasizes long horizon
+        weights = gamma ** torch.arange(h)
+
+    weights = weights / weights.mean()   
+
+    weights = weights.to(y_hat.dtype) 
+
+    # elementwise loss: [B, H, D]
+    loss = f.huber_loss(y_hat, y, delta=delta, reduction='none')
+
+    # reshape weights to broadcast: [1, H, 1]
+    weights = weights.view(1, -1)
+
+    # apply horizon weights
+    loss = loss * weights
+
+    return loss.mean()
+
 
 class TCN(nn.Module, DirectModel):
     def __init__(self, horizon : int, file_path: str):
@@ -78,7 +110,7 @@ class TCN(nn.Module, DirectModel):
         self.n_epochs = config['n_epochs']
         self.batch_size = config['batch_size']
         self.activation = getattr(f, config['activation'])
-        self.loss = nn.MSELoss()
+        self.loss = horizon_weighted_huber # this is an horizon aware loss
 
         self.conv_layers = nn.ModuleList()
 
@@ -155,7 +187,7 @@ class TCN(nn.Module, DirectModel):
                 y_hat = self(batch_X)
 
                 # Compute Loss
-                loss = self.loss(y_hat, batch_y)
+                loss = self.loss(y_hat, batch_y, w_decay = "exp")
 
                 # Backward Pass
                 loss.backward()
