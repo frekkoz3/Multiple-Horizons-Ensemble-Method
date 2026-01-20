@@ -120,16 +120,18 @@ class TCN(nn.Module, DirectModel):
         return x
 
 
-    def fit(self, X: np.ndarray, y: np.ndarray):
+    def fit(self, X: np.ndarray, y: np.ndarray, verbose : bool = False):
         X_tensor = torch.tensor(X, dtype=torch.float32).unsqueeze(1).to(self.device)
         y_tensor = torch.tensor(y, dtype=torch.float32).to(self.device)
 
-        print("Starting TCN training...")
+        if verbose:
+            print("Starting TCN training...")
 
         dataset = TensorDataset(X_tensor, y_tensor)
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
 
-        print("Training TCN model...")
+        if verbose:
+            print("Training TCN model...")
 
         self.train()
 
@@ -137,12 +139,12 @@ class TCN(nn.Module, DirectModel):
 
         for epoch in epoch_iterator:
             epoch_loss = 0.0
-
-            print(f"Epoch {epoch+1}/{self.n_epochs}")
+            if verbose:
+                print(f"Epoch {epoch+1}/{self.n_epochs}")
 
             for batch_X, batch_y in loader:
-
-                print("Processing new batch...")
+                if verbose:
+                    print("Processing new batch...")
 
                 # Move batch to device
                 batch_X = batch_X.to(self.device)
@@ -168,8 +170,8 @@ class TCN(nn.Module, DirectModel):
             # Update progress bar every 10 epochs
             # if (epoch + 1) % 10 == 0:
             #    epoch_iterator.set_postfix(loss=f"{avg_loss:.4f}")
-
-            print(f"Epoch {epoch+1}/{self.n_epochs}, Loss: {avg_loss:.4f}")
+            if verbose:
+                print(f"Epoch {epoch+1}/{self.n_epochs}, Loss: {avg_loss:.4f}")
 
         return avg_loss
 

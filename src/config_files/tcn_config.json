@@ -12,7 +12,7 @@
   "activation": "relu",
   "learning_rate": 0.001,
 
-  "n_epochs": 20,
+  "n_epochs": 100,
   "batch_size": 32,
 
   "device": "cpu"

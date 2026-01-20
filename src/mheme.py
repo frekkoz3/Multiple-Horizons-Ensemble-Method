@@ -125,12 +125,24 @@ class UMHEMe:
         if k != None:
             model = self.models[k]
             variances = 1/self.weights[k, :]
-            plt.bar([i for i in range (0, self.horizon)], variances)
+            plt.plot([i for i in range (0, self.horizon)], variances)
             plt.title(f"Bar plot for the variances of the errors of the model {model} at each time step")
             plt.xlabel("Time step")
             plt.ylabel("Variance of the errors")
             plt.show()
+        else:
+            plt.title(f"Bar plot for the variances of the errors of each model at each time step")
+            plt.xlabel("Time step")
+            plt.ylabel("Variance of the errors")
 
+            import random
+                
+            for k, model in enumerate(self.models):
+                variances = 1/self.weights[k, :]
+                plt.plot([i for i in range (0, self.horizon)], variances, c = (random.random(), random.random(), random.random()), label = f"{model.horizon}")
+
+            plt.legend()
+            plt.show()
 
     def save_model(self, model_path : str):
         """
