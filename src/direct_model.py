@@ -18,12 +18,14 @@ class DirectModel:
     For now, a Temporary Convolutional Neural Network is used as the underlying model.
     """
 
-    def __init__(self, config_path: str):
+    def __init__(self, horizon : int, config_path: str):
+
+        self.horizon = horizon # this is unique for each model so it should be passed
+
         with open(config_path, 'r') as file:
             config = json.load(file)
 
-        self.window = config["window"]
-        self.horizon = config["horizon"]
+        self.window = config["window"] # this is shared across all the models so it is correct to take it from the config
 
     def fit(self, X : np.ndarray, y : np.ndarray):
         """
@@ -56,14 +58,14 @@ class DirectModel:
 
 
 class TCN(nn.Module, DirectModel):
-    def __init__(self, file_path: str):
+    def __init__(self, horizon : int, file_path: str):
         nn.Module.__init__(self)
 
         with open(file_path, 'r') as file:
             config = json.load(file)
 
         self.window = config['window']
-        self.horizon = config['horizon']
+        self.horizon = horizon
 
         inner_layers_dim = config['inner_layers_dim']
         kernel_size = config['kernel_size']
@@ -194,14 +196,14 @@ class TCN(nn.Module, DirectModel):
 
 
 class XGBoost(DirectModel):
-    def __init__(self, file_path: str):
-        super().__init__(file_path)
+    def __init__(self, horizon : int, file_path: str):
+        super().__init__(horizon, file_path)
 
         with open(file_path, 'r') as file:
             config = json.load(file)
 
         self.window = config['window']
-        self.horizon = config['horizon']
+        self.horizon = horizon
 
         self.reg = xgb.XGBRegressor(
             n_estimators=config["n_estimators"],
