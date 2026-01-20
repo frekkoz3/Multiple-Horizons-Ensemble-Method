@@ -1,0 +1,37 @@
+{
+  "electricity": {
+    "id_target": "MT_001",
+    "id_col": "id",
+    "filename": "electricity.csv",
+    "target_col": "power_usage",
+    "date_col": "date"
+  },
+  "solar": {
+    "id_target": 0,
+    "id_col": "id",
+    "filename": "solar.csv",
+    "target_col": "power_mw",
+    "date_col": "date"
+  },
+  "traffic": {
+    "id_target": 400000,
+    "id_col": "id",
+    "filename": "traffic.csv",
+    "target_col": "occupancy",
+    "date_col": "hours_from_start"
+  },
+  "volatility": {
+    "id_target": ".AEX",
+    "id_col": "Symbol",
+    "filename": "volatility.csv",
+    "target_col": "log_vol",
+    "date_col": "date"
+  },
+  "wind": {
+    "id_target": "AT",
+    "id_col": "id",
+    "filename": "wind.csv",
+    "target_col": "power_output",
+    "date_col": "date"
+  }
+}

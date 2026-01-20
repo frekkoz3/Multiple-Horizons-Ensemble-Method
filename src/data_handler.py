@@ -1,14 +1,15 @@
 import numpy as np
 import pandas as pd
+import json
 
-def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state: int | None = None):
+def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state: int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
     """
-        Split a temporal dataset into train, validation and test set. No shuffle
+        Split a temporal dataset into train, validation, and test set. No shuffle
 
         Params :
         - X : set of inputs of shape number_of_series x window
         - y : set of ground truth of shape number_of_series x horizon
-        - proportion : tuple containing the porportion of data to be stored in the train set, in the validation set, in the test set
+        - proportion : tuple containing the proportion of data to be stored in the train set, in the validation set, in the test set
         - shuffle : whether to shuffle samples before splitting
         - random_state : seed for reproducibility (used if shuffle=True)
 
@@ -44,7 +45,7 @@ def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tu
 
     return (X_train, y_train), (X_val, y_val), (X_test, y_test)
 
-def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 1):
+def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
     Split a 1D time series into sliding windows of size (window + horizon).
     Each window produces (X, y) with length `window` and `horizon` respectively.
@@ -123,23 +124,31 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     return day
 
 
-def data_loader(data_path : str, id_col :  str, id_target : str | int, target_col : str, date_col : str):
+def data_loader(data_path : str, dataset : str) -> tuple[np.ndarray, pd.DataFrame]:
     """
     Load dataset from csv file and return the whole dataset and the target time series.
 
     Params:
     - data_path : string, path to the csv file
-    - id_col : string, name of the column containing the time series IDs
-    - id_target : string or int, ID of the target time series to be extracted
-    - target_col : string, name of the column containing the target values
-    - date_col : string, name of the column containing the date values
+    - dataset : string, name of the dataset to load. Supported datasets: 'electricity', 'solar', 'traffic', 'volatility', 'wind'
 
     Returns:
     - time_series : np.ndarray, array of shape (n_samples,) containing the target time series
     - data : pd.DataFrame, dataframe containing the dataset
     """
+    with open(data_path + '/data_config.json', 'r') as f:
+        config = json.load(f)
+
+    assert dataset in config, f"Dataset {dataset} not found in configuration file data_config.json"
+
+    dataset_path = data_path + '/' + config[dataset]['filename']
+    id_col = config[dataset]['id_col']
+    date_col = config[dataset]['date_col']
+    target_col = config[dataset]['target_col']
+    id_target = config[dataset]['id_target']
+
     try:
-        data = pd.read_csv(data_path)
+        data = pd.read_csv(dataset_path)
     except FileNotFoundError as e:
         print(f"Error: {e}")
         raise
