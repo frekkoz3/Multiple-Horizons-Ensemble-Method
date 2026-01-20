@@ -1,5 +1,6 @@
 from src.direct_models import *
 import numpy as np
+from matplotlib import pyplot as plt
 
 import pickle
 
@@ -81,7 +82,7 @@ class UMHEMe:
 
     def predict(self, X):
         """
-        Predict y_hat using X as input. 
+            Predict y_hat using X as input. 
 
             Params : 
             - X : input of shape set_size x .window 
@@ -100,6 +101,36 @@ class UMHEMe:
         y_combined = num / den # set_size x total_horizon
 
         return y_combined
+    
+    def whole_predict(self, X):
+        """
+            Predict y_hat using X as input. Returns all the predictions from all the models in the ensemble. 
+
+            Params : 
+            - X : input of shape set_size x .window 
+
+            Return:
+            - dictionary where the key are the models' names and the values are the models' predictions, shape n_models x total_horizon
+        """
+        y_hat = np.array([autoregressive_prediction(m, self.horizon, X) for m in self.models]) # n_models x set_size x total_horizon
+        return {str(m) : y_hat for m in self.models}
+    
+    def visualize_variances(self, k : int | None = None):
+        """
+            Method to visualize the variances of each model or the variance of a desired model
+
+            Params : 
+            - k : int or None, set to int indicates the index of the desired model to visualize, set to None indicates the whole ensemble as desired model
+        """
+        if k != None:
+            model = self.models[k]
+            variances = 1/self.weights[k, :]
+            plt.bar([i for i in range (0, self.horizon)], variances)
+            plt.title(f"Bar plot for the variances of the errors of the model {model} at each time step")
+            plt.xlabel("Time step")
+            plt.ylabel("Variance of the errors")
+            plt.show()
+
 
     def save_model(self, model_path : str):
         """
