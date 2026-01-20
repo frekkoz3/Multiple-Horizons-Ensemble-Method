@@ -51,6 +51,9 @@ class DirectModel:
         """
         pass
 
+    def __str__(self):
+        return f"class : {self.__class__}; horizon : {self.horizon}"
+
 
 class TCN(nn.Module, DirectModel):
     def __init__(self, file_path: str):
