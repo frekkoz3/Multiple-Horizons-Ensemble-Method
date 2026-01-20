@@ -21,7 +21,8 @@ def autoregressive_prediction(model : DirectModel, total_horizon : int, X : np.n
 
     while sum(y.shape[1] for y in y_hat) < total_horizon:
         y_block = model.predict(X_curr) # set_size x model_horizon
-        y_block = np.atleast_2d(y_block) # ensure it is 2-dimensional
+        # y_block = np.atleast_2d(y_block) # ensure it is 2-dimensional
+        y_block = y_block.reshape(X_curr.shape[0], -1) # set_size x model_horizon
 
         y_hat.append(y_block) # append the predicted block to the final prediction
 
