@@ -169,6 +169,58 @@ class UMHEMe:
             )
             fig.show()
 
+    def visualize_weights(self, k : int | None = None):
+        """
+        Visualize the weights of each model or a desired model using Plotly.
+
+        Params:
+        - k : int or None
+            If int, visualize only the model at index k.
+            If None, visualize all models in the ensemble.
+        """
+        time_steps = np.arange(self.horizon)
+
+        if k is not None:
+            model = self.models[k]
+            w = self.weights/ self.weights.sum(axis = 0)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=time_steps,
+                y=w[k, :],
+                mode='lines+markers',
+                line=dict(color='red', width=2),
+                name=f"Model {model.horizon}"
+            ))
+            fig.update_layout(
+                title=f"Weights of prediction errors for model {model.horizon} at each time step",
+                xaxis_title="Time step",
+                yaxis_title="Weights"
+            )
+            fig.show()
+
+        else:
+            fig = go.Figure()
+            n_models = len(self.models)
+            # Create a color gradient from red to blue
+            colors = px.colors.sample_colorscale("RdBu", [i/(n_models-1) for i in range(n_models)])
+            w = self.weights/ self.weights.sum(axis = 0)
+            for idx, model in enumerate(self.models):
+                fig.add_trace(go.Scatter(
+                    x=time_steps,
+                    y=w[idx, :],
+                    mode='lines+markers',
+                    line=dict(color=colors[idx], width=2),
+                    name=f"Model horizon {model.horizon}"
+                ))
+
+            fig.update_layout(
+                title="Weights of prediction errors for each model at each time step",
+                xaxis_title="Time step",
+                yaxis_title="Weights",
+                legend_title="Models"
+            )
+            fig.show()
+
     def save_model(self, model_path : str):
         """
         Save the whole ensemble model to disk.
