@@ -21,18 +21,17 @@ The method combines forecasts generated at multiple prediction horizons into a s
 ├─ experiments      # folder containing different tests
 ├─ report           # documentation of the final report
 ├─ literautre       # folder containing literature research about the project
-└─ src              # method's Python implementation
+├─ src              # method's Python implementation
+└─ models           # folder containing models' saving files
 ```
 
 ## Results
 
 The proposed method is evaluated on standard time series datasets and compared against baseline forecasting models in terms of variance and predictive accuracy.
 
-## License
-
-MIT License
-
 ## Quick setup
+
+To run the code contained in this repository, please follow the instructions below.
 
 ```bash
     python -m venv .venv
@@ -42,3 +41,7 @@ MIT License
     nbdime config-git --enable
     git lfs install
 ```
+
+## License
+
+MIT License
