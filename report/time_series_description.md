@@ -276,12 +276,7 @@ The main algorithm for training such models is backpropagation via Stochastic Gr
 
 ---
 
-#### 2.3.1 Fully Connected Neural Networks
-Ok, I am joking. No need to explain NN.
-
----
-
-#### (True) 2.3.1 Recurrent Neural Networks (RNN)
+#### 2.3.1 Recurrent Neural Networks (RNN)
 Any RNN block starts with an initial memory ($H_0$), which at first is typically a zero-array. \
 The RNN block takes in the first input $x_1$ along with the initial hidden state $H_0$, producing an output $o_1$ and a hidden state $H_1$. \
 To process the second element in the sequence, the same RNN block takes in the hidden state from
