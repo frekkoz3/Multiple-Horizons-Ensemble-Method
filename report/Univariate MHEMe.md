@@ -24,44 +24,44 @@ The proposed approach integrates these three ideas by combining multiple direct 
 
 ## Formal Definition
 
-Let \( X = \{x_0, \dots, x_t\} \) be a univariate time series. The goal is to predict the next \( h \) future values
-\[
+Let $ X = \{x_0, \dots, x_t\} $ be a univariate time series. The goal is to predict the next $ h $ future values
+$$
 \hat{X}_f = \{\hat{x}_{t+1}, \dots, \hat{x}_{t+h}\}.
-\]
+$$
 
 ### Direct Forecasting Models
 
-Let \( M_k \) denote a **direct forecasting model** with horizon \( k \), defined as
-\[
+Let $ M_k $ denote a **direct forecasting model** with horizon $ k $ , defined as
+$$
 M_k : \mathbb{R}^w \rightarrow \mathbb{R}^k,
-\]
-where \( w \) is the input window size.
+$$
+where $ w $ is the input window size.
 
 ### Autoregressive Forecasting Operator
 
-Define an autoregressive operator \( A_h(\cdot) \) that extends a direct forecasting model to a target horizon \( h \) by recursively feeding predictions back as inputs. Given a model \( M_k \), the operator produces a full \( h \)-step forecast:
-\[
+Define an autoregressive operator $ A_h(\cdot) $ that extends a direct forecasting model to a target horizon $ h $ by recursively feeding predictions back as inputs. Given a model $ M_k $, the operator produces a full $ h $-step forecast:
+$$
 A_h(M_k)(X_{t-w+1:t}) = \hat{X}^{(k)}_f \in \mathbb{R}^h.
-\]
+$$
 
-The autoregressive mechanism iteratively applies \( M_k \) until \( h \) predictions are obtained.
+The autoregressive mechanism iteratively applies $ M_k $ until $ h $ predictions are obtained.
 
 ### Model Ensemble Construction
 
 Instantiate a family of direct models with increasing horizons:
-\[
+$$
 \mathbb{M}_h = \{ M_1, M_2, \dots, M_h \}.
-\]
+$$
 
 Applying the autoregressive operator to each model yields:
-\[
+$$
 \mathbb{F}_h = \{ A_h(M_1), A_h(M_2), \dots, A_h(M_h) \}.
-\]
+$$
 
-Each \( A_h(M_i) \) produces a full forecast vector
-\[
+Each $ A_h(M_i) $ produces a full forecast vector
+$$
 \hat{X}^{(i)}_f = \left( \hat{x}^{(i)}_{t+1}, \dots, \hat{x}^{(i)}_{t+h} \right).
-\]
+$$
 
 ### Prediction Variance Estimation
 
@@ -171,6 +171,8 @@ In particular, bootstrap-based variance estimation could provide a more expressi
 Given the large number of models and forecast horizons involved in the MHEMe framework, we adopt empirical error variance estimation as a computationally efficient and sufficiently accurate approximation. Exploring more advanced variance estimation techniques is left as future work.
 
 ### Benchmarks
+
+
 
 ---
 
