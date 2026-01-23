@@ -69,7 +69,7 @@ class UMHEMe:
     def compute_weights(self, X, y):
         """
             Compute the weights for each model prediction's as described in the "Univariate MHEMe.md" file.
-            The weights are the empirical 
+            The weights are the empirical variances of the errors committed by each model during prediction.
 
             Params:
             - X : input of shape set_size x self.window

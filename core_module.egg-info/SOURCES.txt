@@ -8,5 +8,7 @@ core_module.egg-info/top_level.txt
 experiments/__init__.py
 src/__init__.py
 src/data_handler.py
-src/direct_model.py
+src/direct_models.py
+src/metrics.py
 src/mheme.py
+src/plot_handler.py
