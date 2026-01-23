@@ -5,5 +5,7 @@
     "n_estimators": 1,
     "max_depth": 6,
     "learning_rate": 0.1,
-    "device" : "cpu"
+    "device" : "cpu",
+
+    "loss": "horizon_weighted_huber"
 }

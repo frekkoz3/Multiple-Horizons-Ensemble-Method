@@ -163,6 +163,56 @@ def data_loader(data_path : str, dataset : str) -> tuple[np.ndarray, pd.DataFram
     return time_series , data
 
 
+def json_handler(file_path : str, weights_decay : str, loss_type : str):
+    """
+    Load a json file and modifies its content as a dictionary.
+
+    Params:
+    - file_path : string, path to the json file
+    - weights_decay : string, type of weights decay to be used in the model
+    - loss_type : string, type of loss function to be used in the model
+
+    """
+
+    with open(file_path, 'r') as f:
+        config = json.load(f)
+
+    assert weights_decay in ["uni", "soft_lin", "strong_lin", "exp"], f"weights_decay {weights_decay} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
+    config['weights_decay'] = weights_decay
+    assert loss_type in ["horizon_weighted_huber", "mse"], f"loss_type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
+    config['loss'] = loss_type
+
+    # save the modified config back to the json file
+    with open(file_path, 'w') as f:
+        json.dump(config, f, indent=4)
+
+    print(f"Configuration file {file_path} modified: weights_decay set to {weights_decay}, loss set to {loss_type}")
+    return
+
+
+def data_definer(all_combinations : bool = True, dataset : str):
+    """
+    Returns instances of data models. 
+    """
+    pass
+
+
+def data_trainer(models : dict, dataset : str):
+    """
+    Trains data models for a given dataset.
+    """
+    assert dataset in ['electricity', 'solar', 'traffic', 'volatility', 'wind'], f"Dataset {dataset} not recognized. Choose among 'electricity', 'solar', 'traffic', 'volatility', 'wind'"
+    pass
+
+
+def data_define_and_train(all_combinations : bool = True, dataset : str):
+    """
+    Defines and trains data models for a given dataset.
+    """
+    data_definer(all_combinations, dataset)
+    data_trainer(models, dataset)
+    pass
+
 
 
 if __name__ == '__main__':
