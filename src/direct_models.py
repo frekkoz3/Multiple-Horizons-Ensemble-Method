@@ -16,7 +16,7 @@ import json
 class DirectModel:
     """
     DirectModel is the class implementing the direct strategy for multi-step time series forecasting.
-    For now, a Temporary Convolutional Neural Network is used as the underlying model.
+    For now, a Temporary Convolutional Neural Network and a XGBoost model are used as the underlying models.
     """
 
     def __init__(self, horizon : int, config_path: str):
@@ -57,6 +57,7 @@ class DirectModel:
     def __str__(self):
         return f"class : {self.__class__}; horizon : {self.horizon}"
 
+
 class TCN(nn.Module, DirectModel):
     def __init__(self, horizon : int, file_path: str):
         nn.Module.__init__(self)
@@ -64,9 +65,13 @@ class TCN(nn.Module, DirectModel):
         with open(file_path, 'r') as file:
             config = json.load(file)
 
+
+        # ---- Shared Hyperparameters ----
         self.window = config['window']
         self.horizon = horizon
 
+
+        # ---- TCN Hyperparameters ----
         inner_layers_dim = config['inner_layers_dim']
         kernel_size = config['kernel_size']
         stride = config['stride']
@@ -78,20 +83,20 @@ class TCN(nn.Module, DirectModel):
         self.n_epochs = config['n_epochs']
         self.batch_size = config['batch_size']
         self.activation = getattr(f, config['activation'])
-        self.loss = horizon_weighted_huber # this is an horizon aware loss
+        self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
+        if config['loss'] == "horizon_weighted_huber":
+            self.loss = horizon_weighted_huber
+        else:
+            self.loss = mse
+
+
+        # ---- Weights for loss ----
         self.w_decay = config['weights_decay']
+        self.weights = self.set_weights()
 
-        if self.w_decay == "uni":
-            self.weights = torch.ones(self.horizon)
-        elif self.w_decay == "soft_lin":
-            self.weights = torch.linspace(1.0, 5, self.horizon)
-        elif self.w_decay == "strong_lin":
-            self.weights = torch.arange(1, self.horizon + 1)
-        elif self.w_decay == "exp":
-            gamma = 1.3  # >1 emphasizes long horizon
-            self.weights = gamma ** torch.arange(self.horizon)
 
+        # ---- Build TCN layers ----
         self.conv_layers = nn.ModuleList()
 
         self.conv_layers.append(nn.Conv1d(
@@ -116,15 +121,14 @@ class TCN(nn.Module, DirectModel):
             stride=stride,
             padding=padding
         ))
-        # Features of the last timestamp to the horizon
-        self.readout = nn.Linear(inner_layers_dim[-1], self.horizon)
+        self.readout = nn.Linear(inner_layers_dim[-1], self.horizon)       # Features of the last timestamp to the horizon
 
-        self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
+        # ---- Move to device ----
         self.to(self.device)
 
-    def set_weights(self, w_decay : str):
-        self.w_decay = w_decay
+
+    def set_weights(self):
         if self.w_decay == "uni":
             self.weights = torch.ones(self.horizon)
         elif self.w_decay == "soft_lin":
@@ -191,9 +195,6 @@ class TCN(nn.Module, DirectModel):
             # Calculate average loss for the epoch
             avg_loss = epoch_loss / len(dataset)
 
-            # Update progress bar every 10 epochs
-            # if (epoch + 1) % 10 == 0:
-            #    epoch_iterator.set_postfix(loss=f"{avg_loss:.4f}")
             if verbose:
                 print(f"Epoch {epoch+1}/{self.n_epochs}, Loss: {avg_loss:.4f}")
 
@@ -231,12 +232,18 @@ class XGBoost(DirectModel):
         self.window = config['window']
         self.horizon = horizon
 
+        if config['loss'] == "horizon_weighted_huber":
+            self.objective = horizon_weighted_huber
+        else:
+            self.objective = mse
+
         self.reg = xgb.XGBRegressor(
             n_estimators=config["n_estimators"],
             max_depth=config["max_depth"],
             learning_rate=config["learning_rate"],
             tree_method="hist",
-            device=config["device"] if config["device"] == 'cuda' else None
+            device=config["device"] if config["device"] == 'cuda' else None,
+            objective=self.objective
         )
 
     def fit(self, X: np.ndarray, y: np.ndarray):

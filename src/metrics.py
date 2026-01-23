@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 import torch 
 
-def horizon_weighted_huber(y_hat : np.ndarray, y : np.ndarray, weights : np.ndarray, delta=1.0):
+def horizon_weighted_huber(y_hat : np.ndarray | torch.Tensor, y : np.ndarray | torch.Tensor, weights : np.ndarray | torch.Tensor, delta=1.0):
     """
 
         Compute a horizon-aware Huber loss for direct multi-step (seq2seq) forecasting.
@@ -49,7 +49,7 @@ def horizon_weighted_huber(y_hat : np.ndarray, y : np.ndarray, weights : np.ndar
 
     return loss.mean()
 
-def mse(y_hat: np.ndarray, y: np.ndarray):
+def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights: np.ndarray | torch.Tensor | None):
     """
     Compute Mean Squared Error (MSE).
 
@@ -59,6 +59,8 @@ def mse(y_hat: np.ndarray, y: np.ndarray):
         Model predictions.
     y : array-like, shape (B, H)
         Ground-truth values.
+    weights : array-like, shape (H,),
+        Used only for matching the function signature. Not used in MSE.
 
     Returns
     -------
