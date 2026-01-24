@@ -163,7 +163,7 @@ def data_loader(data_path : str, dataset : str) -> tuple[np.ndarray, pd.DataFram
     return time_series , data
 
 
-def json_handler(file_path : str, weights_decay : str, loss_type : str):
+def json_handler(file_path : str, weights_decay : str, loss_type : str, horizon : int, window : int):
     """
     Load a json file and modifies its content as a dictionary.
 
@@ -171,6 +171,8 @@ def json_handler(file_path : str, weights_decay : str, loss_type : str):
     - file_path : string, path to the json file
     - weights_decay : string, type of weights decay to be used in the model
     - loss_type : string, type of loss function to be used in the model
+    - horizon : integer, the length of the horizon forecasting
+    - window : integer, the length of the window for predictions
 
     """
 
@@ -182,6 +184,9 @@ def json_handler(file_path : str, weights_decay : str, loss_type : str):
     assert loss_type in ["horizon_weighted_huber", "mse"], f"loss_type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
     config['loss'] = loss_type
 
+    config['horizon'] = horizon
+    config['window'] = window
+
     # save the modified config back to the json file
     with open(file_path, 'w') as f:
         json.dump(config, f, indent=4)
@@ -190,7 +195,7 @@ def json_handler(file_path : str, weights_decay : str, loss_type : str):
     return
 
 
-def data_definer(all_combinations : bool = True, dataset : str):
+def data_definer( dataset : str, all_combinations : bool = True):
     """
     Returns instances of data models. 
     """
@@ -205,15 +210,37 @@ def data_trainer(models : dict, dataset : str):
     pass
 
 
-def data_define_and_train(all_combinations : bool = True, dataset : str):
+def data_define_and_train(dataset : str, all_combinations : bool = True):
     """
     Defines and trains data models for a given dataset.
     """
-    data_definer(all_combinations, dataset)
+    data_definer(dataset, all_combinations)
     data_trainer(models, dataset)
     pass
 
 
 
 if __name__ == '__main__':
-    pass
+    # Global variables
+    WINDOW = 48
+    HORIZON = 12
+    
+    DATA_PATH = '../data'
+    
+    TCN_PATH_CONFIG_LOAD = '../src/config_files/tcn_config.json'
+    TCN_PATH_SAVE = '../models/tcn'
+    
+    XGB_PATH_CONFIG_LOAD = '../src/config_files/xgb_config.json'
+    XGB_PATH_SAVE = '../models/xgb'
+
+
+    # Load data
+    dataset_initials = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    
+    for ds in dataset_initials:
+        print(f"Loading dataset: {dataset_initials[ds]}")
+        X, data = data_loader(data_path = DATA_PATH, dataset = dataset_initials[ds])
+    
+        # Change name of X, data based on ds (This is pure flex):
+        globals()[f'X_{ds}'] = X
+        globals()[f'data_{ds}'] = data

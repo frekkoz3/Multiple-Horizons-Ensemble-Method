@@ -1,17 +1,21 @@
 import numpy as np
 
+import json
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as f
 from torch.utils.data import TensorDataset, DataLoader
-
-from src.metrics import *
-
 from tqdm import tqdm
 
 import xgboost as xgb
 
-import json
+from statsmodels.tsa.arima.model import ARIMA
+import pmdarima as pm # used for auto_arima 
+
+
+from src.metrics import *
+
 
 class DirectModel:
     """
@@ -83,7 +87,6 @@ class TCN(nn.Module, DirectModel):
         self.n_epochs = config['n_epochs']
         self.batch_size = config['batch_size']
         self.activation = getattr(f, config['activation'])
-        self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
         if config['loss'] == "horizon_weighted_huber":
             self.loss = horizon_weighted_huber
@@ -93,7 +96,7 @@ class TCN(nn.Module, DirectModel):
 
         # ---- Weights for loss ----
         self.w_decay = config['weights_decay']
-        self.weights = self.set_weights()
+        self.set_weights()
 
 
         # ---- Build TCN layers ----
@@ -123,6 +126,7 @@ class TCN(nn.Module, DirectModel):
         ))
         self.readout = nn.Linear(inner_layers_dim[-1], self.horizon)       # Features of the last timestamp to the horizon
 
+        self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
         # ---- Move to device ----
         self.to(self.device)
@@ -235,7 +239,7 @@ class XGBoost(DirectModel):
         if config['loss'] == "horizon_weighted_huber":
             self.objective = horizon_weighted_huber
         else:
-            self.objective = mse
+            self.objective = "reg:squarederror"
 
         self.reg = xgb.XGBRegressor(
             n_estimators=config["n_estimators"],
@@ -273,6 +277,63 @@ class XGBoost(DirectModel):
         """
         self.reg.save_model(file_path)
         return
+
+
+class ARIMAModel(DirectModel):
+    """
+    ARIMA and SARIMA models. They are notì "direct" but autoregressive models, and thus used only as benchmarks. 
+    """
+    def __init__(self, horizon : int, file_path : str):
+        super().__init__(horizon, file_path)
+        
+        with open(file_path, 'r') as f:
+            json.load(f)
+
+        self.horizon = horizon
+        self.window = config['window']
+
+        # --- Parameters ----
+        self.auto_arima = config['auto_arima']
+        self.seasonality = config['seasonality']
+        
+        if not self.auto_arima:
+            self.p = config['p']
+            self.d = config['d']
+            self.q = config['q']
+            if self.seasonality > 1:
+                self.P = config['P']
+                self.D = config['D']
+                self.Q = config['Q']
+
+
+    def fit( y : np.ndarray):
+        if self.auto_arima:
+            self.model = pm.auto_arima(y = y, m = self.seasonality)
+            return
+        else:
+            if self.seasonality == 1:
+                self.model = ARIMA(endog = y, order=(self.p, self.d, self.q))
+            else:
+                self.model = ARIMA(endog = y, order=(self.p, self.d, self.q), seasonal_order = (self.P, self.D, self.Q, self.seasonality))
+            self.model.fit()
+            return self.model.summary()
+
+    def predict(y : np.ndarray):
+        self.model.predict(n_periods = self.horizon)
+
+        return
+        
+                
+
+        
+
+
+        
+
+        
+
+        
+        
 
 
 if __name__ == '__main__':

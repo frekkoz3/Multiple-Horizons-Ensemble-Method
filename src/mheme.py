@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 import pickle
+import os
 
 
 def autoregressive_prediction(model : DirectModel, total_horizon : int, X : np.ndarray):
@@ -229,6 +230,11 @@ class UMHEMe:
         - model_path : pickle path (path_to_model.pkl) where to save the model
         """
         assert model_path.endswith('.pkl'), "Model path must end with .pkl"
+
+        directory = os.path.dirname(model_path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        
         with open(model_path, 'wb') as f:
             pickle.dump(self, f)
         return
