@@ -45,11 +45,12 @@ def autoregressive_prediction(model : DirectModel, total_horizon : int, X : np.n
 
 class UMHEMe:
 
-    def __init__(self, horizon, window, model_class : DirectModel, config_path : str):
+    def __init__(self, horizon : int, window : int, model_class : DirectModel, config_path : str, skip : int = 1):
         self.horizon = horizon
         self.window = window
-        self.models = [model_class(h, config_path) for h in range(1, horizon + 1)]
-        self.weights = np.ones(shape = (self.horizon, self.horizon)) # n_models x horizon
+        self.skip = skip
+        self.models = [model_class(h, config_path) for h in range(1, horizon + 1, skip)]
+        self.weights = np.ones(shape = (len(self.models), self.horizon)) # n_models x horizon
 
     def fit(self, X, y):
         """
@@ -62,8 +63,9 @@ class UMHEMe:
             Note : 
             - Before fitting the single models it must be ensured that y will be shrink down to the right shape, since each model has a different horizon and each model demands a ground truth of the correct shape
         """
-        for i, m in enumerate(self.models):
-            h = i+1
+        for m in self.models:
+            print(f"Fitting {m}")
+            h = m.horizon
             y_h = y[:, :h] 
             m.fit(X, y_h)
         
@@ -77,10 +79,11 @@ class UMHEMe:
             - y : ground truth of shape set_size x self.horizon
         """
         y_hat = np.array([autoregressive_prediction(m, self.horizon, X) for m in self.models]) # n_models x set_size x total_horizon
-        errors = y_hat - y[None, : , : ] # n_models x set_size x total_horizon
-        error_var = errors.var(axis=1)        # n_models x total_horizon
+        self.errors = y_hat - y[None, : , : ] # n_models x set_size x total_horizon
+        self.error_vars = self.errors.var(axis=1)        # n_models x total_horizon
+        self.errors = self.errors.mean(axis = 1)
         eps = 1e-8 # numerical stability 
-        self.weights = 1.0 / (error_var + eps) # n_models x total_horizon 
+        self.weights = 1.0 / (self.error_vars + eps) # n_models x total_horizon 
 
     def predict(self, X):
         """
@@ -115,7 +118,7 @@ class UMHEMe:
             - dictionary where the key are the models' names and the values are the models' predictions, shape n_models x total_horizon
         """
         y_hat = np.array([autoregressive_prediction(m, self.horizon, X) for m in self.models]) # n_models x set_size x total_horizon
-        return {str(m) : y_hat for m in self.models}
+        return {str(m) : y_hat[i] for i, m in enumerate(self.models)}
     
     def visualize_variances(self, k: int | None = None):
         """
@@ -170,6 +173,113 @@ class UMHEMe:
             )
             fig.show()
 
+    def visualize_errors(self, k : int | None = None):
+        """
+        Visualize the errors of each model or a desired model using Plotly.
+
+        Params:
+        - k : int or None
+            If int, visualize only the model at index k.
+            If None, visualize all models in the ensemble.
+        """
+        time_steps = np.arange(self.horizon)
+
+        if k is not None:
+            model = self.models[k]
+            std = np.sqrt(self.error_vars[k])
+            mean = self.errors[k]
+
+            upper = mean + std
+            lower = mean - std
+
+            fig = go.Figure()
+
+            # Upper bound
+            fig.add_trace(go.Scatter(
+                x=time_steps,
+                y=upper,
+                mode='lines',
+                line=dict(width=0),
+                showlegend=False
+            ))
+
+            # Lower bound + fill
+            fig.add_trace(go.Scatter(
+                x=time_steps,
+                y=lower,
+                mode='lines',
+                fill='tonexty',
+                fillcolor='rgba(255, 0, 0, 0.2)',
+                line=dict(width=0),
+                name='Variance'
+            ))
+
+            # Mean error
+            fig.add_trace(go.Scatter(
+                x=time_steps,
+                y=mean,
+                mode='lines+markers',
+                line=dict(color='red', width=2),
+                name=f"Model {model.horizon}"
+            ))
+
+        else:
+
+            fig = go.Figure()
+            n_models = len(self.models)
+            # Create a color gradient from red to blue
+            colors = px.colors.sample_colorscale("RdBu", [i/(n_models-1) for i in range(n_models)])
+
+            for idx, model in enumerate(self.models):
+                mean = self.errors[idx]
+                std = np.sqrt(self.error_vars[idx])
+
+                upper = mean + std
+                lower = mean - std
+
+                color = colors[idx]
+
+                # Upper bound
+                fig.add_trace(go.Scatter(
+                    x=time_steps,
+                    y=upper,
+                    mode='lines',
+                    line=dict(width=0),
+                    showlegend=False
+                ))
+
+                # Lower bound + fill
+                fig.add_trace(go.Scatter(
+                    x=time_steps,
+                    y=lower,
+                    mode='lines',
+                    fill='tonexty',
+                    fillcolor=color.replace('rgb', 'rgba').replace(')', ', 0.15)'),
+                    line=dict(width=0),
+                    showlegend=False
+                ))
+
+            for idx, model in enumerate(self.models):
+                mean = self.errors[idx]
+                color = colors[idx]
+                # Mean line
+                fig.add_trace(go.Scatter(
+                    x=time_steps,
+                    y=mean,
+                    mode='lines+markers',
+                    line=dict(color=color, width=2),
+                    name=f"Model horizon {model.horizon}"
+                ))
+
+            fig.update_layout(
+                title="Prediction errors for each model at each time step",
+                xaxis_title="Time step",
+                yaxis_title="Errors",
+                legend_title="Models"
+            )
+            fig.show()
+
+
     def visualize_weights(self, k : int | None = None):
         """
         Visualize the weights of each model or a desired model using Plotly.
@@ -204,7 +314,7 @@ class UMHEMe:
             n_models = len(self.models)
             # Create a color gradient from red to blue
             colors = px.colors.sample_colorscale("RdBu", [i/(n_models-1) for i in range(n_models)])
-            w = self.weights/ self.weights.sum(axis = 0)
+            w = self.weights / self.weights.sum(axis = 0)
             for idx, model in enumerate(self.models):
                 fig.add_trace(go.Scatter(
                     x=time_steps,

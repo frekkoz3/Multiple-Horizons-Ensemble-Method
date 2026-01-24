@@ -172,8 +172,6 @@ Given the large number of models and forecast horizons involved in the MHEMe fra
 
 ### Benchmarks
 
-
-
 ---
 
 ## Details

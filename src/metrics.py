@@ -74,5 +74,4 @@ def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights:
         y = torch.tensor(y, dtype=torch.float32)
 
     return F.mse_loss(y_hat, y, reduction="mean")
-
     
