@@ -49,7 +49,7 @@ def horizon_weighted_huber(y_hat : np.ndarray | torch.Tensor, y : np.ndarray | t
 
     return loss.mean()
 
-def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights: np.ndarray | torch.Tensor | None):
+def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights: np.ndarray | torch.Tensor | None = None):
     """
     Compute Mean Squared Error (MSE).
 
@@ -74,5 +74,4 @@ def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights:
         y = torch.tensor(y, dtype=torch.float32)
 
     return F.mse_loss(y_hat, y, reduction="mean")
-
     
