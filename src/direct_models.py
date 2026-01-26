@@ -63,7 +63,7 @@ class DirectModel:
 
 
 class TCN(nn.Module, DirectModel):
-    def __init__(self, horizon : int, file_path: str):
+    def __init__(self, horizon : int | None, window : int | None, file_path: str):
         nn.Module.__init__(self)
 
         with open(file_path, 'r') as file:
@@ -71,8 +71,8 @@ class TCN(nn.Module, DirectModel):
 
 
         # ---- Shared Hyperparameters ----
-        self.window = config['window']
-        self.horizon = horizon
+        self.window = config['window'] if window is None else window
+        self.horizon = config['horizon'] if horizon is None else horizon
 
 
         # ---- TCN Hyperparameters ----

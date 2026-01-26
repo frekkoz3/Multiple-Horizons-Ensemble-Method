@@ -52,6 +52,12 @@ class UMHEMe:
         self.models = [model_class(h, config_path) for h in range(1, horizon + 1, skip)]
         self.weights = np.ones(shape = (len(self.models), self.horizon)) # n_models x horizon
 
+
+    def __str__(self):
+        model_str = ', '.join([str(m) for m in self.models])
+        return f"UMHEMe(horizon={self.horizon}, window={self.window}, models=[{model_str}])"
+
+
     def fit(self, X, y):
         """
             Fit the whole ensemble method. Passes a set of X and corresponding ground truth. 

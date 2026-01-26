@@ -2,6 +2,90 @@ import numpy as np
 import pandas as pd
 import json
 
+from statsmodels.tsa.statespace.tools import diff
+from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
+
+
+def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
+    """
+    Fill missing NaN values in the time series data.
+    Params:
+    - time_series : array of shape (n_samples,)
+    - method : string, method to fill missing values ('linear', 'cubic', etc.)
+    """
+    time_series = pd.Series(time_series)
+    time_series = time_series.interpolate(method=method).to_numpy()
+    return time_series
+
+
+def data_scaler(time_series: np.ndarray, type : str = 'rob') -> np.ndarray:
+    """
+    Applies a scaler to the time series data.
+    Params:
+    - time_series : array of shape (n_samples,)
+    - type : string, type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
+    """
+    time_series = time_series.reshape(-1, 1)
+    if type == 'rob':
+        scaler = RobustScaler()
+    elif type == 'std':
+        scaler = StandardScaler()
+    else:
+        scaler = MinMaxScaler()
+
+    time_series = scaler.fit_transform(time_series).flatten()
+    return time_series
+
+
+def data_differentiator(time_series: np.ndarray) -> np.ndarray:
+    """
+    Differentiate time series data.
+    Params: 
+    - time_series : array of shape (n_samples,)
+    - diff_order : array of shape (2), differentiation order and seasonal order
+    """
+    time_series = diff(time_series, k_diff=diff_order[0], k_seasonal_diff=diff_order[1], seasonal_periods=24)
+    return 
+
+
+def data_time_aggregator(time_series: np.ndarray, freq: str) -> np.ndarray:
+    """
+    Aggregate time series data to a different frequency.
+    Params:
+    - time_series : array of shape (n_samples,)
+    - freq : string, frequency to aggregate to 
+    """
+    time_series = pd.Series(time_series).resample(freq).mean().to_numpy()
+
+    return time_series
+
+
+def data_preprocessing(time_series: np.ndarray, aggregator : bool = False, aggregator_window : int = 1, differentiator : bool = False, differentiator_orders : list = [1, 0], scaler : bool = False, scaler_type : str = 'rob', filler : bool = False, filler_type : str = 'splines') -> np.ndarray:
+    """
+    Do some preprocessing on the time series data.
+
+    Params:
+    - time_series : array of shape (n_samples,)
+    - aggregator : whether to apply time aggregation
+    - aggregator_window : window size for time aggregation
+    - differentiator : whether to apply differentiation
+    - differentiator_orders : array of shape (2), differentiation order and seasonal order
+    - scaler : whether to apply scaling
+
+    Returns:
+    - time_series : preprocessed time series
+    """ 
+    if aggregator:
+        time_series = data_time_aggregator(time_series, freq=aggregator_window)
+    if differentiator:
+        time_series = data_differentiator(time_series, diff_order=differentiator_orders)
+    if scaler:
+        assert scaler_type in ['rob', 'std', 'minmax'], f"scaler_type {scaler_type} not recognized. Choose among 'rob', 'std', 'minmax'"
+        time_series = data_scaler(time_series, scaler_type=scaler_type)
+    
+    return time_series
+   
+
 def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state: int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
     """
         Split a temporal dataset into train, validation, and test set. No shuffle
@@ -45,6 +129,7 @@ def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tu
 
     return (X_train, y_train), (X_val, y_val), (X_test, y_test)
 
+
 def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
     Split a 1D time series into sliding windows of size (window + horizon).
@@ -77,6 +162,7 @@ def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 
         y[i] = time_series[start + window : start + window + horizon]
 
     return X, y
+
 
 def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_path : str, proportions : tuple=(0.6, 0.2, 0.2), shuffled : bool = False, random_state : int | None = None) -> str :
     """
@@ -195,30 +281,131 @@ def json_handler(file_path : str, weights_decay : str, loss_type : str, horizon 
     return
 
 
-def data_definer( dataset : str, all_combinations : bool = True):
+def dataset_handler(dataset_init : str, data_path : str, prop : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state : int | None = None, **preprocess_kwargs) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
     """
-    Returns instances of data models. 
-    """
-    pass
+    Handles data loading, preprocessing, and splitting for a given dataset.
+    
+    Params:
+    - dataset_init : string, initials of the dataset to load
+    - data_path : string, path to the configuration file
+    - prop : tuple, proportions for train/val/test split
+    - shuffle : boolean, whether to shuffle data before splitting
+    - random_state : integer or None, random state for reproducibility if shuffle is True
+
+    **preprocess_kwargs : keyword arguments for data_preprocessing function:
+        - window : length of input window for sliding window
+        - horizon : length of output horizon for sliding window
+        - aggregator : whether to apply time aggregation
+        - aggregator_window : window size for time aggregation
+        - differentiator : whether to apply differentiation
+        - differentiator_orders : array of shape (2), differentiation order and seasonal order
+        - scaler : whether to apply scaling
+        - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
 
 
-def data_trainer(models : dict, dataset : str):
+    Returns:
+    - train : tuple, training set (X_train, y_train)
+    - val : tuple, validation set (X_val, y_val)
+    - test : tuple, test set (X_test, y_test)
+    """ 
+    # Load data
+    X, data = data_loader(data_path = data_path, dataset = dataset_initials[dataset_init])
+    # Preprocess data
+    X = data_preprocessing(X, *preprocess_kwargs)
+
+    # Create sliding windows
+    window = preprocess_kwargs.get('window', 48)
+    horizon = preprocess_kwargs.get('horizon', 12)
+
+    X_slide, y_slide = sliding_window(X, window=window, horizon=horizon)
+    # Split data
+    train, val, test = train_validation_test_split(X_slide, y_slide, prop=prop, shuffle=shuffle, random_state=random_state)  
+
+    # return train, val, test
+    return train, val, test
+    
+
+
+def models_definer(dataset_init : list[str] | str, operation : list[str], config_model_path : str, **kwargs) -> dict:
+    """
+    Defines data models for a given dataset.
+
+    Params:
+    - dataset_init : string or list of strings, initial letter(s) of the dataset. Supported: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
+    - operation : list of strings, operations to perform. Supported operations: 'losses', 'models', 'weights' and their combinations
+    - config_model_path : string, path to the model configuration file
+    - **kwargs : keyword arguments for model characteristics non-specific for the training phase
+
+    Returns:
+    - models : dictionary of models defined for the dataset. For many datasets, returns a list of dictionaries. Dictionaries are always return in the same order of dataset_init 
+
+    Notes:
+    `operation` defines the kind of combinations of models to cycle on for the model definition. 
+    
+    In particular, should be always defined in `**kwargs` :
+    1. loss_type: (list of) type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
+    2. model_type: (list of) type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
+    3. weights_type: (list of) type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
+    """
+    assert dataset_init in ['e', 's', 't', 'v', 'w'], f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    
+    models_for_each_dataset = []
+    for ds in dataset_init if isinstance(dataset_init, list) else [dataset_init]:
+        models = {}
+        # TODO
+        models_for_each_dataset.append(models)      
+    
+    if len(models_for_each_dataset) == 1:
+        return models_for_each_dataset[0]
+
+    return models_for_each_dataset
+
+    
+
+def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_models : bool = True):
     """
     Trains data models for a given dataset.
+
+    Params:
+    - models : dictionary of models to train
+    - train : string, name of the dataset to use
+    - dataset_init : string, initials of the dataset to load
+    - save_models : boolean, whether to save the trained models
     """
-    assert dataset in ['electricity', 'solar', 'traffic', 'volatility', 'wind'], f"Dataset {dataset} not recognized. Choose among 'electricity', 'solar', 'traffic', 'volatility', 'wind'"
-    pass
 
+    for model in models:
+        print(f"\n\nTrain model: {model}")
+        model.fit(train[0], train[1])
 
-def data_define_and_train(dataset : str, all_combinations : bool = True):
+        # if model is UMHEME, compute weights
+        if str(model).__contains__("UMHEMe"):
+            model.compute_weights(train[0], train[1])
+
+        if save_models:
+            model.save_model(f"../models/{str(model)}_{dataset_init}.model")
+
+    return 
+
+    
+def models_evaluator(models : dict, test : list[np.ndarray] | None):
     """
-    Defines and trains data models for a given dataset.
+    Evaluates data models for a given dataset.
+
+    Params:
+    - models : dictionary of fitted models to evaluate
+    - test : tuple, test set (X_test, y_test)
     """
-    data_definer(dataset, all_combinations)
-    data_trainer(models, dataset)
-    pass
+    results = {}
+    print("\n\nTest set evaluation:")
+    for model in models:
+        print(f"\nEvaluate model: {model}")
+        if str(model).__contains__("UMHEMe"):
+            results[str(model)] = (model.predict(test[0]), model.whole_predict(test[0]))
+        else:
+            results[str(model)] = model.predict(test[0])
 
-
+    return results
+    
 
 if __name__ == '__main__':
     # Global variables
