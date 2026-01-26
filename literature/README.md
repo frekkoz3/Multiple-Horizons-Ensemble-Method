@@ -11,7 +11,7 @@ This folder contains several papers. In this section we will provide a brief sum
 1983, *Robert L. Winkler  and  Spyros Makridakis*
 
 > **Abstract** \
- Aggregating information by combining forecasts from two or more forecasting methods is an alternative to using just a single method. \
+> Aggregating information by combining forecasts from two or more forecasting methods is an alternative to using just a single method. \
 > In this paper we provide extensive empirical results showing that combined forecasts obtained through weighted averages can be quite accurate. \
 > Five procedures for estimating weights are investigated, and two appear to be superior to the others. These two procedures provide forecasts that are more accurate overall than forecasts from individual methods. Furthermore, they are superior to forecasts found from a simple unweighted average of the same methods.
 
@@ -40,8 +40,8 @@ The results show that two of the proposed weighting procedures consistently outp
 
 1996, *Xei*
 
-> **Abstract**
-An algorithm is developed to construct global gridded fields of monthly precipitation by merging estimates from five sources of information with different characteristics, including gauge-based monthly analyses from the Global Precipitation Climatology Centre, three types of satellite estimates [the infrared-based GOES Precipitation Index, the microwave (MW) scattering-based Grody, and the MW emission-based Chang estimates], and predictions produced by the operational forecast model of the European Centre for Medium-Range Weather Forecasts. A two-step strategy is used to: 1) reduce the random error found in the individual sources and 2) reduce the bias of the combined analysis.\
+> **Abstract** \
+> An algorithm is developed to construct global gridded fields of monthly precipitation by merging estimates from five sources of information with different characteristics, including gauge-based monthly analyses from the Global Precipitation Climatology Centre, three types of satellite estimates [the infrared-based GOES Precipitation Index, the microwave (MW) scattering-based Grody, and the MW emission-based Chang estimates], and predictions produced by the operational forecast model of the European Centre for Medium-Range Weather Forecasts. A two-step strategy is used to: 1) reduce the random error found in the individual sources and 2) reduce the bias of the combined analysis.\
 First, the three satellite-based estimates and the model predictions are combined linearly based on a maximum likelihood estimate, in which the weighting coefficients are inversely proportional to the squares of the individual random errors determined by comparison with gauge observations and subjective assumptions. This combined analysis is then blended with an analysis based on gauge observations using a method that presumes that the bias of the gauge-based field is small where sufficient gauges are available and that the gradient of the precipitation field is best represented by the combination of satellite estimates and model predictions elsewhere.\
 The algorithm is applied to produce monthly precipitation analyses for an 18-month period from July 1987 to December 1988. Results showed substantial improvements of the merged analysis relative to the individual sources in describing the global precipitation field. The large-scale spatial patterns, both in the Tropics and the extratropics, are well represented with reasonable amplitudes. Both the random error and the bias have been reduced compared to the individual data sources, and the merged analysis appears to be of reasonable quality everywhere. However, the actual quality of the merged analysis depends strongly on our uncertain and incomplete knowledge of the error structures of the individual data sources.
 
@@ -54,7 +54,7 @@ The algorithm is applied to produce monthly precipitation analyses for an 18-mon
 2023, *V Cerqueira, L Torgo*
 
 > **Abstract** \
-Ensemble methods combine predictions from multiple models to improve forecasting accuracy. \
+>Ensemble methods combine predictions from multiple models to improve forecasting accuracy. \
 > This paper investigates the effectiveness of multi-output ensembles for multi-step time series forecasting problems. \
 > While dynamic ensembles have been extensively studied for one-step ahead forecasting, their application to multi-step forecasting remains largely unexplored, particularly regarding how combination rules should be applied across different forecasting horizons. \
 > We conducted comprehensive experiments using 3568 time series from diverse domains and an ensemble of 30 multi-output models to address this research gap. \
@@ -99,8 +99,8 @@ This study confirms that model performance varies across forecasting horizons an
 
 2022, *Xiaomin Wei, Xiaogong Sun, Jilin Sun, Jinfang Yin, Jing Sun and Chongjian Liu*
 
-> **Abstract**
-Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. \
+> **Abstract** \
+> Previous studies on multi-model ensemble forecasting mainly focused on the weight allocation of each model, but did not discuss how to suppress the reduction of ensemble forecasting accuracy when adding poorer models. \
 > Based on a variant weight (VW) method and the equal weight (EW) method, this study explored this topic through theoretical and real case analyses. \
 > A theoretical proof is made, showing that this VW method can improve the forecasting accuracy of a multi-model ensemble, in the case of either the same models combination or adding an even worse model into the original multi-model ensemble, compared to the EW method. \
 > Comparative multi-model ensemble forecasting experiments against a real case between the VW and EW methods show that the forecasting accuracy of a multi-model ensemble applying the VW method is better than that of each individual model (including the model from the European Centre for Medium-Range Weather Forecasts). \
@@ -119,8 +119,8 @@ All the models used (taken from previous papers) are geophysical models, so they
 
 2024, *Eivind Strøm & Odd Erik Gundersen*
 
-> **Abstract**
-This paper addresses the evaluation of multi-step point forecasting models. Currently, deep learning models for multi-step forecasting are evaluated on datasets by selecting one error metric that is aggregated across the time series and the forecast horizon. This approach hides insights that would otherwise be useful for practitioners when evaluating and selecting forecasting models. We propose four novel metrics to provide additional insights when evaluating models: 1) a win-loss metric that shows how models perform across time series in the dataset, allowing the practitioner to check whether the model is superior for all series or just a subset of series. 2) a variance weighted metric that accounts for differences in variance across the seasonal period. It can be used to evaluate models for seasonal datasets such as rush hour traffic prediction, where it is desirable to select the model that performs best during the periods of high uncertainty. 3) a delta horizon metric measuring how much models update their forecast for a period in the future over the forecast horizon. Less change to the forecast means more stability over time and is desirable for most forecasting applications. 4) decomposed errors that relate the forecasting error to trend, seasonality, and noise. Decomposing the errors allows the practitioners to identify for which components the model is making more errors and adjust the model accordingly. To show the applicability of the proposed metrics, we implement four deep learning architectures and conduct experiments on five benchmark datasets. We highlight several use cases for the proposed metrics and discuss the applicability in light of the empirical results.
+> **Abstract** \
+> This paper addresses the evaluation of multi-step point forecasting models. Currently, deep learning models for multi-step forecasting are evaluated on datasets by selecting one error metric that is aggregated across the time series and the forecast horizon. This approach hides insights that would otherwise be useful for practitioners when evaluating and selecting forecasting models. We propose four novel metrics to provide additional insights when evaluating models: 1) a win-loss metric that shows how models perform across time series in the dataset, allowing the practitioner to check whether the model is superior for all series or just a subset of series. 2) a variance weighted metric that accounts for differences in variance across the seasonal period. It can be used to evaluate models for seasonal datasets such as rush hour traffic prediction, where it is desirable to select the model that performs best during the periods of high uncertainty. 3) a delta horizon metric measuring how much models update their forecast for a period in the future over the forecast horizon. Less change to the forecast means more stability over time and is desirable for most forecasting applications. 4) decomposed errors that relate the forecasting error to trend, seasonality, and noise. Decomposing the errors allows the practitioners to identify for which components the model is making more errors and adjust the model accordingly. To show the applicability of the proposed metrics, we implement four deep learning architectures and conduct experiments on five benchmark datasets. We highlight several use cases for the proposed metrics and discuss the applicability in light of the empirical results.
 
 We include this paper because it provides a strong foundation for evaluating multi-step forecasting models and proposes novel metrics that address limitations of commonly used evaluation practices. In particular, the authors focus explicitly on metrics designed for multi-step forecasting, which aligns closely with the goals of our work.
 
@@ -147,8 +147,8 @@ The results show that different evaluation metrics can substantially alter concl
 
 2020, *Bryan Lim and Stefan Zohren*
 
-> **Abstract**
-Numerous deep learning architectures have been developed to accommodate the diversity of time series datasets across different domains. In this article, we survey common encoder and decoder designs used in both one-step-ahead and multi-horizon time series forecasting – describing how temporal information is incorporated into predictions by each model. Next, we highlight recent developments in hybrid deep learning with neural network components to improve pure methods in either category. Lastly, we outline some ways in which deep learning can also facilitate decision support with time series data.
+> **Abstract** \
+> Numerous deep learning architectures have been developed to accommodate the diversity of time series datasets across different domains. In this article, we survey common encoder and decoder designs used in both one-step-ahead and multi-horizon time series forecasting – describing how temporal information is incorporated into predictions by each model. Next, we highlight recent developments in hybrid deep learning with neural network components to improve pure methods in either category. Lastly, we outline some ways in which deep learning can also facilitate decision support with time series data.
 
 In this paper, the authors present a comprehensive survey of neural network–based approaches for time series forecasting. The survey covers a wide range of architectures, including recurrent, convolutional, attention-based, and hybrid encoder–decoder models, and discusses how temporal information is incorporated for both one-step-ahead and multi-horizon forecasting tasks.
 
@@ -169,11 +169,51 @@ In particular, the discussion on iterative and direct forecasting strategies mot
 
 2024, *Ming Jin , Huan Yee Koh , Qingsong Wen , Daniele Zambon , Cesare Alippi, Geoffrey I. Webb ,Irwin King , Shirui Pan*
 
-> **Abstract**
-Time series are the primary data type used to record dynamic system measurements and generated in great volume by both physical sensors and online processes (virtual sensors). Time series analytics is therefore crucial to unlocking the wealth of information implicit in available data. With the recent advancements in graph neural networks (GNNs), there has been a surge in GNN-based approaches for time series analysis. These approaches can explicitly model inter-temporal and inter-variable relationships, which traditional and other deep neural network-based methods struggle to do. In this survey, we provide a comprehensive review of graph neural networks for time series analysis (GNN4TS), encompassing four fundamental dimensions: forecasting, classification, anomaly detection, and imputation. Our aim is to guide designers and practitioners to understand, build applications, and advance research of GNN4TS. At first, we provide a comprehensive task-oriented taxonomy of GNN4TS. Then, we present and discuss representative research works and introduce mainstream applications of GNN4TS. A comprehensive discussion of potential future research directions completes the survey. This survey, for the first time, brings together a vast array of knowledge on GNN-based time series research,  highlighting foundations, practical applications, and opportunities of graph neural networks for time series analysis.
+> **Abstract** \
+> Time series are the primary data type used to record dynamic system measurements and generated in great volume by both physical sensors and online processes (virtual sensors). Time series analytics is therefore crucial to unlocking the wealth of information implicit in available data. With the recent advancements in graph neural networks (GNNs), there has been a surge in GNN-based approaches for time series analysis. These approaches can explicitly model inter-temporal and inter-variable relationships, which traditional and other deep neural network-based methods struggle to do. In this survey, we provide a comprehensive review of graph neural networks for time series analysis (GNN4TS), encompassing four fundamental dimensions: forecasting, classification, anomaly detection, and imputation. Our aim is to guide designers and practitioners to understand, build applications, and advance research of GNN4TS. At first, we provide a comprehensive task-oriented taxonomy of GNN4TS. Then, we present and discuss representative research works and introduce mainstream applications of GNN4TS. A comprehensive discussion of potential future research directions completes the survey. This survey, for the first time, brings together a vast array of knowledge on GNN-based time series research,  highlighting foundations, practical applications, and opportunities of graph neural networks for time series analysis.
 
 We include this paper as it provides a comprehensive overview of how Graph Neural Networks (GNNs) can be applied to time series analysis. The survey illustrates how GNN-based models are able to capture inter-temporal and inter-variable dependencies, and discusses their application not only to forecasting tasks, but also to classification, imputation, and anomaly detection.
 
 In particular, the survey highlights how different modeling assumptions can lead to varying uncertainty characteristics, which is relevant when considering ensemble-based forecasting strategies.
 
 Although the paper is not directly related to our proposed method, it offers valuable background on advanced neural architectures for time series modeling and highlights alternative directions for incorporating structural information into forecasting models.
+
+---
+
+## 📄 Time-series data preprocessing: A survey and an empirical analysis
+
+2025 (Online 2024), *Amal Tawakuli, Bastian Havers, Vincenzo Gulisano, Daniel Kaiser, Thomas Engel*
+
+
+> **Abstract** \
+> Data are naturally collected in their raw state and must undergo a series of preprocessing steps to obtain data in their input state for Artificial Intelligence (AI) and other applications. The data preprocessing phase is not only necessary to fit input requirements but also effective in improving AI training efficiency and output accuracy. 
+Data preprocessing is a time consuming and complex phase that lacks a unified and structured approach. We survey data preprocessing techniques under different categories to provide an extended and structured scope of data preprocessing relevant to numerical time-series data. We also provide an empirical analysis of the impact of 
+preprocessing techniques on the quality of the data and on the performance of AI algorithms. In addition, we discuss the feasibility of distributing some of the surveyed techniques to the edge. Leveraging edge computing to distribute data preprocessing reduces the workload on central systems, creates more manageable data lakes, reduces the consumption of resources (e.g., energy) and enables EdgeAI.
+
+In this survey, the authors propose a taxonomy for time-series preprocessing, including feature engineering and data compression. They introduce a **Directed Acyclic Graph (DAG)** approach to standardizing the sequence of preprocessing tasks, ensuring that dependencies (e.g., handling outliers before normalization) are respected.
+
+The paper provides an empirical evaluation using the AirQuality dataset and LSTM networks, testing several critical categories:
+- **Normalization**: Results showed that **Z-score and Robust Standardization** yielded the highest prediction accuracy, reducing RMSE by ~49% compared to unnormalized data.
+- **Missing Data**: Two cases are identified: isolated missing instances (handled well by Cubic Spline Interpolation) and sequence/block missingness (requiring multivariate techniques like Expectation Maximization).
+- **Outlier Detection**: The authors found that removing outliers can sometimes degrade performance if those extreme values carry structural information.
+
+This paper is relevant to our work as it provides a framework for the Data Granularity and Scaling decisions made during EDA. It reinforces the importance of a structured preprocessing pipeline to ensure that deep learning models, in our case TCNs, receive stable inputs.
+
+---
+
+## 📄 Data preprocessing techniques and neural networks for trended time series forecasting
+
+2025, *Ana Lazcano & Miguel A. Jaramillo-Morán*
+
+> **Abstract** \
+> Research on time series forecasting continues to attract significant attention, particularly in the use of Artificial Neural Networks (ANN) due to their ability to model nonlinear behaviors. However, forecasting economic time series with steep upward trends presents challenges, often leading to poorly fitting predictions. This study ad-dresses the issue by applying differentiation as a preprocessing step. Three real-world time series exhibiting this behavior were analyzed and forecasted using two neural network models—Long Short-Term Memory (LSTM) and Multilayer Perceptron (MLP)—with and without preprocessing. The differentiated series were further processed using techniques such as Empirical Mode Decomposition (EMD) and trend-fluctuation decomposition via Moving Average of Wavelet Transform. The results demonstrate that differentiation significantly enhances forecasting accuracy across all tested models, reducing errors by up to 30 % compared to models without pre-processing. This approach effectively mitigates trend-related distortions, leading to more reliable predictions in complex economic time series.
+
+This research focuses on the saturation effect in neural networks: when a network is trained on data with a specific range but is asked to forecast a series with a steep upward trend, the neurons often reach their activation limits, leading to systematic underestimation.
+
+To solve this, the authors evaluate:
+- **Differentiation**: Transforming the series into its first derivative ($\Delta y_t = y_t - y_{t-1}$) to stabilize the mean and remove the trend.
+- **Decomposition**: Using **Empirical Mode Decomposition (EMD)** and **Wavelet Transforms** on the differentiated series to further isolate signal from noise.
+
+The methodology was tested on highly trended datasets including Apple and Nvidia stock prices. For series with clear drift, differentiation improved the MAPE by more than 96% in some instances. The study concludes that by training on changes rather than absolute levels, the model can better generalize and learn the underlying spikes of the data rather than focussing on the magnitude of the trend.
+
+This paper provides examples on  how we can handle the Volatility dataset, and it confirms that for non-stationary series exhibiting regime changes or drift, differentiation can be very useful for neural network convergence and accuracy.
