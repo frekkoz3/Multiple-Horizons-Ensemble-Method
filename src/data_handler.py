@@ -4,86 +4,6 @@ import json
 
 from statsmodels.tsa.statespace.tools import diff
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
-
-
-def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
-    """
-    Fill missing NaN values in the time series data.
-    Params:
-    - time_series : array of shape (n_samples,)
-    - method : string, method to fill missing values ('linear', 'cubic', etc.)
-    """
-    time_series = pd.Series(time_series)
-    time_series = time_series.interpolate(method=method).to_numpy()
-    return time_series
-
-
-def data_scaler(time_series: np.ndarray, type : str = 'rob') -> np.ndarray:
-    """
-    Applies a scaler to the time series data.
-    Params:
-    - time_series : array of shape (n_samples,)
-    - type : string, type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
-    """
-    time_series = time_series.reshape(-1, 1)
-    if type == 'rob':
-        scaler = RobustScaler()
-    elif type == 'std':
-        scaler = StandardScaler()
-    else:
-        scaler = MinMaxScaler()
-
-    time_series = scaler.fit_transform(time_series).flatten()
-    return time_series
-
-
-def data_differentiator(time_series: np.ndarray) -> np.ndarray:
-    """
-    Differentiate time series data.
-    Params: 
-    - time_series : array of shape (n_samples,)
-    - diff_order : array of shape (2), differentiation order and seasonal order
-    """
-    time_series = diff(time_series, k_diff=diff_order[0], k_seasonal_diff=diff_order[1], seasonal_periods=24)
-    return 
-
-
-def data_time_aggregator(time_series: np.ndarray, freq: str) -> np.ndarray:
-    """
-    Aggregate time series data to a different frequency.
-    Params:
-    - time_series : array of shape (n_samples,)
-    - freq : string, frequency to aggregate to 
-    """
-    time_series = pd.Series(time_series).resample(freq).mean().to_numpy()
-
-    return time_series
-
-
-def data_preprocessing(time_series: np.ndarray, aggregator : bool = False, aggregator_window : int = 1, differentiator : bool = False, differentiator_orders : list = [1, 0], scaler : bool = False, scaler_type : str = 'rob', filler : bool = False, filler_type : str = 'splines') -> np.ndarray:
-    """
-    Do some preprocessing on the time series data.
-
-    Params:
-    - time_series : array of shape (n_samples,)
-    - aggregator : whether to apply time aggregation
-    - aggregator_window : window size for time aggregation
-    - differentiator : whether to apply differentiation
-    - differentiator_orders : array of shape (2), differentiation order and seasonal order
-    - scaler : whether to apply scaling
-
-    Returns:
-    - time_series : preprocessed time series
-    """ 
-    if aggregator:
-        time_series = data_time_aggregator(time_series, freq=aggregator_window)
-    if differentiator:
-        time_series = data_differentiator(time_series, diff_order=differentiator_orders)
-    if scaler:
-        assert scaler_type in ['rob', 'std', 'minmax'], f"scaler_type {scaler_type} not recognized. Choose among 'rob', 'std', 'minmax'"
-        time_series = data_scaler(time_series, scaler_type=scaler_type)
-    
-    return time_series
    
 
 def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state: int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
@@ -291,17 +211,19 @@ def dataset_handler(dataset_init : str, data_path : str, prop : tuple = (0.6, 0.
     - prop : tuple, proportions for train/val/test split
     - shuffle : boolean, whether to shuffle data before splitting
     - random_state : integer or None, random state for reproducibility if shuffle is True
-
+    
     **preprocess_kwargs : keyword arguments for data_preprocessing function:
-        - window : length of input window for sliding window
-        - horizon : length of output horizon for sliding window
+        - window : length of input window for sliding window. Default 48
+        - horizon : length of output horizon for sliding window. Default 12
+
         - aggregator : whether to apply time aggregation
         - aggregator_window : window size for time aggregation
         - differentiator : whether to apply differentiation
         - differentiator_orders : array of shape (2), differentiation order and seasonal order
         - scaler : whether to apply scaling
         - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
-
+        - filler : whether to apply missing value filling
+        - filler_type : method to fill missing values ('linear', 'cubic', 'spline')
 
     Returns:
     - train : tuple, training set (X_train, y_train)
@@ -311,7 +233,7 @@ def dataset_handler(dataset_init : str, data_path : str, prop : tuple = (0.6, 0.
     # Load data
     X, data = data_loader(data_path = data_path, dataset = dataset_initials[dataset_init])
     # Preprocess data
-    X = data_preprocessing(X, *preprocess_kwargs)
+    X = data_preprocessing(X, **preprocess_kwargs)
 
     # Create sliding windows
     window = preprocess_kwargs.get('window', 48)
@@ -323,36 +245,158 @@ def dataset_handler(dataset_init : str, data_path : str, prop : tuple = (0.6, 0.
 
     # return train, val, test
     return train, val, test
+
+
+
+def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
+    """
+    Fill missing NaN values in the time series data.
+    Params:
+    - time_series : array of shape (n_samples,)
+    - method : string, method to fill missing values ('linear', 'cubic', 'spline'). Default 'spline'
+    """
+    assert method in ['linear', 'cubic', 'spline'], f"method {method} not recognized. Choose among 'linear', 'cubic', 'spline'"
+    time_series = pd.Series(time_series)
+    time_series = time_series.interpolate(method=method).to_numpy()
+    return time_series
+
+
+def data_scaler(time_series: np.ndarray, type : str = 'rob') -> np.ndarray:
+    """
+    Applies a scaler to the time series data.
+    Params:
+    - time_series : array of shape (n_samples,)
+    - type : string, type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
+    """
+    assert type in ['rob', 'std', 'minmax'], f"type {type} not recognized. Choose among 'rob', 'std', 'minmax'"
+
+    time_series = time_series.reshape(-1, 1)
+    if type == 'rob':
+        scaler = RobustScaler()
+    elif type == 'std':
+        scaler = StandardScaler()
+    else:
+        scaler = MinMaxScaler()
+
+    time_series = scaler.fit_transform(time_series).flatten()
+    return time_series
+
+
+def data_differentiator(time_series: np.ndarray, diff_order: list[int]) -> np.ndarray:
+    """
+    Differentiate time series data.
+    Params: 
+    - time_series : array of shape (n_samples,)
+    - diff_order : array of shape (3), differentiation order, seasonal order, and seasonal periods
+    """
+    assert len(diff_order) == 3, "diff_order must be of length 3"
+    time_series = diff(time_series, k_diff=diff_order[0], k_seasonal_diff=diff_order[1], seasonal_periods=diff_order[2])
+    return time_series
+
+
+def data_time_aggregator(time_series: np.ndarray, freq: str) -> np.ndarray:
+    """
+    Aggregate time series data to a different frequency.
+    Params:
+    - time_series : array of shape (n_samples,)
+    - freq : string, frequency to aggregate to 
+    """
+    time_series = pd.Series(time_series).resample(freq).mean().to_numpy()
+
+    return time_series
+
+
+def data_preprocessing(time_series: np.ndarray, aggregator : bool = False, aggregator_window : int = 1, differentiator : bool = False, differentiator_orders : list = [1, 0, 24], scaler : bool = False, scaler_type : str = 'rob', filler : bool = False, filler_type : str = 'splines') -> np.ndarray:
+    """
+    Do some preprocessing on the time series data.
+
+    Params:
+    - time_series : array of shape (n_samples,)
+    - aggregator : whether to apply time aggregation
+    - aggregator_window : window size for time aggregation
+    - differentiator : whether to apply differentiation
+    - differentiator_orders : array of shape (3), differentiation order, seasonal order, and seasonal periods
+    - scaler : whether to apply scaling
+    - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
+    - filler : whether to apply missing value filling
+    - filler_type : method to fill missing values ('linear', 'cubic', 'spline')
+
+    Returns:
+    - time_series : preprocessed time series
+    """ 
+    if aggregator:
+        time_series = data_time_aggregator(time_series, freq=aggregator_window)
+    if differentiator:
+        time_series = data_differentiator(time_series, diff_order=differentiator_orders)
+    if scaler:
+        assert scaler_type in ['rob', 'std', 'minmax'], f"scaler_type {scaler_type} not recognized. Choose among 'rob', 'std', 'minmax'"
+        time_series = data_scaler(time_series, scaler_type=scaler_type)
+    if filler:
+        assert filler_type in ['linear', 'cubic', 'spline'], f"filler_type {filler_type} not recognized. Choose among 'linear', 'cubic', 'spline'"
+        time_series = data_filler(time_series, method=filler_type)
+    
+    return time_series
     
 
-
-def models_definer(dataset_init : list[str] | str, operation : list[str], config_model_path : str, **kwargs) -> dict:
+def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, model_type : list[str] | str, weights_type : list[str] | str, config_model_path : str,  **kwargs) -> dict:
     """
     Defines data models for a given dataset.
 
     Params:
-    - dataset_init : string or list of strings, initial letter(s) of the dataset. Supported: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
-    - operation : list of strings, operations to perform. Supported operations: 'losses', 'models', 'weights' and their combinations
-    - config_model_path : string, path to the model configuration file
+    - dataset_init : str or list of str, initial letter(s) of the dataset. Supported: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
+    - loss_type : str or list of str, type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
+    - model_type : str or list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
+    - weights_type : str or list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
+    - config_model_path : str, path to the model configuration file
     - **kwargs : keyword arguments for model characteristics non-specific for the training phase
+        - horizon : int or list of int, forecast horizon. Default 12
+        - window : int or list of int, input window size. Default 48
+        - base_model : str, base model for UMHEMe. Supported: 'TCN', 'XGBoost'
+        - skip : int, skip parameter for UMHEMe. Default 1
 
     Returns:
     - models : dictionary of models defined for the dataset. For many datasets, returns a list of dictionaries. Dictionaries are always return in the same order of dataset_init 
 
     Notes:
-    `operation` defines the kind of combinations of models to cycle on for the model definition. 
     
-    In particular, should be always defined in `**kwargs` :
-    1. loss_type: (list of) type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
-    2. model_type: (list of) type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
-    3. weights_type: (list of) type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
     """
     assert dataset_init in ['e', 's', 't', 'v', 'w'], f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    assert loss_type in ['horizon_weighted_huber', 'mse'], f"Loss type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
+    assert model_type in ['TCN', 'XGBoost', 'ARIMA', 'UMHEMe'], f"Model type {model_type} not recognized. Choose among 'TCN', 'XGBoost', 'ARIMA', 'UMHEMe'"
+    assert weights_type in ['uni', 'soft_lin', 'strong_lin', 'exp'], f"Weights type {weights_type} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
     
     models_for_each_dataset = []
-    for ds in dataset_init if isinstance(dataset_init, list) else [dataset_init]:
+
+    for i, ds in dataset_init if isinstance(dataset_init, list) else [dataset_init]:
         models = {}
-        # TODO
+
+        for loss in loss_type if isinstance(loss_type, list) else [loss_type]:
+            for model in model_type if isinstance(model_type, list) else [model_type]:
+                for weights in weights_type if isinstance(weights_type, list) else [weights_type]:
+                    # Modify json config file
+                    json_handler(file_path = config_model_path, weights_decay = weights, loss_type = loss, horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i])
+                    
+                    # Define model
+                    if model == 'TCN':
+                        from direct_models import TCN
+                        models[f'TCN_{loss}_{weights}'] = TCN(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_path)
+                    elif model == 'XGBoost':
+                        from direct_models import XGBoost
+                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_path)
+                    elif model == 'ARIMA':
+                        from direct_models import ARIMA
+                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_path)
+                    else # UMHEMe
+                        from mheme import UMHEMe
+                        base_model_class = None
+                        if 'base_model' in kwargs:
+                            if kwargs['base_model'] == 'TCN':
+                                base_model_class = TCN
+                            else:  # XGBoost
+                                base_model_class = XGBoost
+
+                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], model_class = base_model_class, config_path = config_model_path, skip = kwargs.get('skip', 1))
+                        
         models_for_each_dataset.append(models)      
     
     if len(models_for_each_dataset) == 1:
@@ -361,7 +405,6 @@ def models_definer(dataset_init : list[str] | str, operation : list[str], config
     return models_for_each_dataset
 
     
-
 def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_models : bool = True):
     """
     Trains data models for a given dataset.
