@@ -130,45 +130,6 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     return day
 
 
-def data_loader(data_path : str, dataset : str) -> tuple[np.ndarray, pd.DataFrame]:
-    """
-    Load dataset from csv file and return the whole dataset and the target time series.
-
-    Params:
-    - data_path : string, path to the csv file
-    - dataset : string, name of the dataset to load. Supported datasets: 'electricity', 'solar', 'traffic', 'volatility', 'wind'
-
-    Returns:
-    - time_series : np.ndarray, array of shape (n_samples,) containing the target time series
-    - data : pd.DataFrame, dataframe containing the dataset
-    """
-    with open(data_path + '/data_config.json', 'r') as f:
-        config = json.load(f)
-
-    assert dataset in config, f"Dataset {dataset} not found in configuration file data_config.json"
-
-    dataset_path = data_path + '/' + config[dataset]['filename']
-    id_col = config[dataset]['id_col']
-    date_col = config[dataset]['date_col']
-    target_col = config[dataset]['target_col']
-    id_target = config[dataset]['id_target']
-
-    try:
-        data = pd.read_csv(dataset_path)
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        raise
-
-    try:
-        target_series = data[data[id_col] == id_target].sort_values(date_col).set_index(date_col)
-        time_series = target_series[target_col]
-    except KeyError as e:
-        print(f"Error: {e}")
-        raise
-
-    return time_series , data
-
-
 def json_handler(file_path : str, weights_decay : str, loss_type : str, horizon : int, window : int):
     """
     Load a json file and modifies its content as a dictionary.
@@ -201,18 +162,25 @@ def json_handler(file_path : str, weights_decay : str, loss_type : str, horizon 
     return
 
 
-def dataset_handler(dataset_init : str, data_path : str, prop : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state : int | None = None, **preprocess_kwargs) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
+def dataset_handler(dataset_init : str, data_path : str, data_config_path : str, prop : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state : int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
     """
     Handles data loading, preprocessing, and splitting for a given dataset.
     
     Params:
     - dataset_init : string, initials of the dataset to load
     - data_path : string, path to the configuration file
+    - data_config_path : string, path to the data configuration file
     - prop : tuple, proportions for train/val/test split
     - shuffle : boolean, whether to shuffle data before splitting
     - random_state : integer or None, random state for reproducibility if shuffle is True
-    
-    **preprocess_kwargs : keyword arguments for data_preprocessing function:
+
+    Returns:
+    - train : tuple, training set (X_train, y_train)
+    - val : tuple, validation set (X_val, y_val)
+    - test : tuple, test set (X_test, y_test)
+
+    Notes:
+    data_config_path must contain the following preprocessing parameters for each dataset:
         - window : length of input window for sliding window. Default 48
         - horizon : length of output horizon for sliding window. Default 12
 
@@ -224,28 +192,26 @@ def dataset_handler(dataset_init : str, data_path : str, prop : tuple = (0.6, 0.
         - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
         - filler : whether to apply missing value filling
         - filler_type : method to fill missing values ('linear', 'cubic', 'spline')
+    """
+    datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    dataset = datasets[dataset_init]
 
-    Returns:
-    - train : tuple, training set (X_train, y_train)
-    - val : tuple, validation set (X_val, y_val)
-    - test : tuple, test set (X_test, y_test)
-    """ 
     # Load data
-    X, data = data_loader(data_path = data_path, dataset = dataset_initials[dataset_init])
+    X, data = data_loader(data_path = data_path, data_config_path = data_config_path, dataset_init = dataset_init)
     # Preprocess data
-    X = data_preprocessing(X, **preprocess_kwargs)
+    X = data_preprocessing(X, data_config_path = data_config_path, dataset_init = dataset_init)
 
     # Create sliding windows
-    window = preprocess_kwargs.get('window', 48)
-    horizon = preprocess_kwargs.get('horizon', 12)
-
-    X_slide, y_slide = sliding_window(X, window=window, horizon=horizon)
+    with open(data_config_path, 'r') as f:
+        config = json.load(f)
+    
+    X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
     # Split data
     train, val, test = train_validation_test_split(X_slide, y_slide, prop=prop, shuffle=shuffle, random_state=random_state)  
 
     # return train, val, test
     return train, val, test
-
 
 
 def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
@@ -306,12 +272,15 @@ def data_time_aggregator(time_series: np.ndarray, freq: str) -> np.ndarray:
     return time_series
 
 
-def data_preprocessing(time_series: np.ndarray, aggregator : bool = False, aggregator_window : int = 1, differentiator : bool = False, differentiator_orders : list = [1, 0, 24], scaler : bool = False, scaler_type : str = 'rob', filler : bool = False, filler_type : str = 'splines') -> np.ndarray:
+def data_preprocessing(time_series: np.ndarray, data_config_path : str, dataset_init : str, aggregator : bool = False, aggregator_window : int = 1, differentiator : bool = False, differentiator_orders : list = [1, 0, 24], scaler : bool = False, scaler_type : str = 'rob', filler : bool = False, filler_type : str = 'splines') -> np.ndarray:
     """
     Do some preprocessing on the time series data.
 
     Params:
     - time_series : array of shape (n_samples,)
+    - data_config_path : string, path to the data configuration file
+    - dataset_init : string, initials of the dataset to load. Supported initials: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
+
     - aggregator : whether to apply time aggregation
     - aggregator_window : window size for time aggregation
     - differentiator : whether to apply differentiation
@@ -324,21 +293,84 @@ def data_preprocessing(time_series: np.ndarray, aggregator : bool = False, aggre
     Returns:
     - time_series : preprocessed time series
     """ 
-    if aggregator:
-        time_series = data_time_aggregator(time_series, freq=aggregator_window)
-    if differentiator:
-        time_series = data_differentiator(time_series, diff_order=differentiator_orders)
-    if scaler:
-        assert scaler_type in ['rob', 'std', 'minmax'], f"scaler_type {scaler_type} not recognized. Choose among 'rob', 'std', 'minmax'"
-        time_series = data_scaler(time_series, scaler_type=scaler_type)
-    if filler:
-        assert filler_type in ['linear', 'cubic', 'spline'], f"filler_type {filler_type} not recognized. Choose among 'linear', 'cubic', 'spline'"
-        time_series = data_filler(time_series, method=filler_type)
+    with open(data_config_path, 'r') as f:
+        config = json.load(f)
+
+    datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    dataset = datasets[dataset_init]
+
+    try:
+        if config[dataset]['aggregator']:
+            time_series = data_time_aggregator(time_series, freq=config[dataset]['aggregator_window'])
+        if config[dataset]['differentiator']:
+            time_series = data_differentiator(time_series, diff_order= config[dataset]['differentiator_orders'])
+        if config[dataset]['scaler']:
+            assert config[dataset]['scaler_type'] in ['rob', 'std', 'minmax'], f"scaler_type {config[dataset]['scaler_type']} not recognized. Choose among 'rob', 'std', 'minmax'"
+            time_series = data_scaler(time_series, scaler_type=config[dataset]['scaler_type'])
+        if config[dataset]['filler']:
+            assert config[dataset]['filler_type'] in ['linear', 'cubic', 'spline'], f"filler_type {config[dataset]['filler_type']} not recognized. Choose among 'linear', 'cubic', 'spline'"
+            time_series = data_filler(time_series, method=config[dataset]['filler_type'])
+    except KeyError as e:
+        print(f"Error: {e}")
+        raise
     
     return time_series
+
+
+def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> tuple[np.ndarray, pd.DataFrame]:
+    """
+    Load dataset from csv file and return the whole dataset and the target time series.
+
+    Params:
+    - data_path : string, path to the csv file
+    - data_config_path : string, path to the data configuration file
+    - dataset_init : string, initial letter of the dataset to load. Supported initials: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
+
+    Returns:
+    - time_series : np.ndarray, array of shape (n_samples,) containing the target time series
+    - data : pd.DataFrame, dataframe containing the dataset
+
+    Notes:
+    if value of id_target in data_config_path is 'ALL', the function returns all the time series in a pivoted format (rows: ids, columns: time steps)
+    """
+    with open(data_config_path, 'r') as f:
+        config = json.load(f)
+
+    datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    dataset = datasets[dataset_init]
+
+    dataset_path = data_path + '/' + config[dataset]['filename']
+    id_col = config[dataset]['id_col']
+    date_col = config[dataset]['date_col']
+    target_col = config[dataset]['target_col']
+    id_target = config[dataset]['id_target']
+
+    try:
+        data = pd.read_csv(dataset_path)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        raise
+
+    try:
+        if id_target != 'ALL': # We are working on a specific series
+            target_series = data[data[id_col] == id_target].sort_values(date_col).set_index(date_col)
+            time_series = target_series[target_col]
+
+            return time_series , data
+
+        else:  # We are working on all the time series, so we aggregate them
+            multiple_time_series = data.pivot(index=date_col, columns=id_col, values=target_col).sort_index()
+
+            return multiple_time_series , data
+    except KeyError as e:
+        print(f"Error: {e}")
+        raise
+
     
 
-def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, model_type : list[str] | str, weights_type : list[str] | str, config_model_path : str,  **kwargs) -> dict:
+def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, model_type : list[str] | str, weights_type : list[str] | str, config_model_paths : list[str] | str,  **kwargs) -> dict:
     """
     Defines data models for a given dataset.
 
@@ -347,7 +379,7 @@ def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, 
     - loss_type : str or list of str, type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
     - model_type : str or list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
     - weights_type : str or list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
-    - config_model_path : str, path to the model configuration file
+    - config_model_paths : str or list of str, path(s) to the model configuration file(s)
     - **kwargs : keyword arguments for model characteristics non-specific for the training phase
         - horizon : int or list of int, forecast horizon. Default 12
         - window : int or list of int, input window size. Default 48
@@ -371,22 +403,22 @@ def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, 
         models = {}
 
         for loss in loss_type if isinstance(loss_type, list) else [loss_type]:
-            for model in model_type if isinstance(model_type, list) else [model_type]:
+            for j, model in model_type if isinstance(model_type, list) else [model_type]:
                 for weights in weights_type if isinstance(weights_type, list) else [weights_type]:
                     # Modify json config file
-                    json_handler(file_path = config_model_path, weights_decay = weights, loss_type = loss, horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i])
+                    json_handler(file_path = config_model_paths[j], weights_decay = weights, loss_type = loss, horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i])
                     
                     # Define model
                     if model == 'TCN':
                         from direct_models import TCN
-                        models[f'TCN_{loss}_{weights}'] = TCN(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_path)
+                        models[f'TCN_{loss}_{weights}'] = TCN(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_paths[j])
                     elif model == 'XGBoost':
                         from direct_models import XGBoost
-                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_path)
+                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_paths[j])
                     elif model == 'ARIMA':
                         from direct_models import ARIMA
-                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_path)
-                    else # UMHEMe
+                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_paths[j])
+                    else:  # UMHEMe
                         from mheme import UMHEMe
                         base_model_class = None
                         if 'base_model' in kwargs:
@@ -395,7 +427,7 @@ def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, 
                             else:  # XGBoost
                                 base_model_class = XGBoost
 
-                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], model_class = base_model_class, config_path = config_model_path, skip = kwargs.get('skip', 1))
+                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], model_class = base_model_class, config_path = config_model_paths[j], skip = kwargs.get('skip', 1))
                         
         models_for_each_dataset.append(models)      
     
@@ -405,7 +437,7 @@ def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, 
     return models_for_each_dataset
 
     
-def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_models : bool = True):
+def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_models : bool = True, models_path_save : str = '../models/'):
     """
     Trains data models for a given dataset.
 
@@ -414,6 +446,7 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
     - train : string, name of the dataset to use
     - dataset_init : string, initials of the dataset to load
     - save_models : boolean, whether to save the trained models
+    - models_path_save : string, path to save the trained models
     """
 
     for model in models:
@@ -425,7 +458,7 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
             model.compute_weights(train[0], train[1])
 
         if save_models:
-            model.save_model(f"../models/{str(model)}_{dataset_init}.model")
+            model.save_model(f"{models_path_save}/{str(model)}_{dataset_init}.model")
 
     return 
 
