@@ -86,7 +86,7 @@ def plot_forecast(input_ts : np.ndarray, ground_truth : np.ndarray, prediction :
         x=[i for i in range (len(input_ts), len(input_ts) + len(ground_truth))],
         y=ground_truth,
         mode='lines+markers',
-        line=dict(color="green", width=1),
+        line=dict(color="blue", width=1),
         name=f"ground truth {name}"
     ))
     fig.add_trace(go.Scatter(
@@ -144,7 +144,7 @@ def plot_multiple_forecast(input_ts : np.ndarray, ground_truth : np.ndarray, pre
         x=[i for i in range (len(input_ts), len(input_ts) + len(ground_truth))],
         y=ground_truth,
         mode='lines+markers',
-        line=dict(color="green", width=2),
+        line=dict(color="blue", width=2),
         name=f"ground truth {name}"
     ))
     colors = px.colors.sample_colorscale("RdBu", [i/(len(predictions)-1) for i in range(len(predictions))])
