@@ -4,7 +4,7 @@
 
 The scope of this file is to introduce the reader to the main characteristics of Time Series and their Analysis. \
 In Section 1, an introduction to some basic concepts is presented; in Section 2, some classic statistical models and modern machine learning architectures for Time Series are proposed.
-Most of the information in Chapter 1 comes from "*Time Series Analysis and Its Applications*", *R. H. Shumway, D. S. Stoffer, Springer, 2016*. For the statistical models, information is taken from "*Applied Time Series Analysis and Forecasting with Python*", *Huang, C., Petukhina, A., Springer, 202.*; Machine learning architectures descriptions are references to "*Modern Time Series Forecasting Using Python*", *Joseph, M., Tackes, J., Packt, 2024*.
+Most of the information in Chapter 1 comes from "*Time Series Analysis and Its Applications*", *R. H. Shumway, D. S. Stoffer, Springer, 2016*. For the statistical models, information is taken from "*Applied Time Series Analysis and Forecasting with Python*", *Huang, C., Petukhina, A., Springer, 2022*; Machine learning architectures descriptions are references to "*Modern Time Series Forecasting Using Python*", *Joseph, M., Tackes, J., Packt, 2024*.
 
 ### 0.1 Table of Contents
 <!-- TOC -->
