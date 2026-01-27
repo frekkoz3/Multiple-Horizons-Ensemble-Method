@@ -56,7 +56,7 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
                     elif model == 'XGBoost':
                         models[f'XGBoost_{loss}_{weights}'] = XGBoost(file_path = model_config_paths[j])
                     elif model == 'ARIMA':
-                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(file_path = model_config_paths[j])
+                        models[f'ARIMA_{loss}_{weights}'] = ARIMAModel(file_path = model_config_paths[j])
                     else:  # UMHEMe
                         base_model_class = None
                         if 'base_model' in kwargs:
@@ -95,13 +95,17 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
     """
 
     for model_name, model_instance in models.items():
-        
         print(f"\n\nTrain model: {model_name}")
-        model_instance.fit(train[0], train[1])
 
-        # if model is UMHEME, compute weights
-        if "UMHEMe" in model_name:
-            model_instance.compute_weights(train[0], train[1])
+        if "ARIMA" not in model_name:
+            model_instance.fit(train[0], train[1])
+    
+            # if model is UMHEME, compute weights
+            if "UMHEMe" in model_name:
+                model_instance.compute_weights(train[0], train[1])
+
+        else:
+            model_instance.fit(train[0])
 
         if save_models:
             os.makedirs(models_path_save, exist_ok=True)
@@ -123,7 +127,6 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     print("\n\nTest set evaluation:")
     for model_name, model_instance in models.items():
         print(f"\nEvaluate model: {model_name}")
-        
         if "UMHEMe" in model_name:
             results[model_name] = (model_instance.predict(test[0]), model_instance.whole_predict(test[0]))
         else:

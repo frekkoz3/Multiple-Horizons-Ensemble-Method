@@ -1,0 +1,14 @@
+{
+    "window": 168,
+    "horizon": 24,
+    "auto_arima": true,
+    "seasonality": 24,
+    "p": 1,
+    "d": 1,
+    "q": 1,
+    "P": 1,
+    "D": 1,
+    "Q": 1,
+    "weights_decay": "uni",
+    "loss": "horizon_weighted_huber"
+}
