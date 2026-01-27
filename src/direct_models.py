@@ -227,13 +227,13 @@ class TCN(nn.Module, DirectModel):
 
 
 class XGBoost(DirectModel):
-    def __init__(self, horizon : int, file_path: str):
+    def __init__(self, horizon : int, window : int | None, file_path: str):
         super().__init__(horizon, file_path)
 
         with open(file_path, 'r') as file:
             config = json.load(file)
 
-        self.window = config['window']
+        self.window = config['window'] if window is None else window
         self.horizon = horizon
 
         if config['loss'] == "horizon_weighted_huber":

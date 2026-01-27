@@ -1,23 +1,22 @@
 {
-  "window": 48,
-  "horizon": 12,
-
-  "n_layers": 2,
-  "inner_layers_dim": [16, 8],
-
-  "kernel_size": [3, 3],
-  "stride": 1,
-  "padding": 1,
-
-  "activation": "relu",
-  "learning_rate": 0.001,
-
-  "n_epochs": 150,
-  "batch_size": 16,
-
-  "weights_decay" : "exp",
-  "loss": "horizon_weighted_huber",
-
-
-  "device": "cpu"
+    "window": 168,
+    "horizon": 24,
+    "n_layers": 2,
+    "inner_layers_dim": [
+        16,
+        8
+    ],
+    "kernel_size": [
+        3,
+        3
+    ],
+    "stride": 1,
+    "padding": 1,
+    "activation": "relu",
+    "learning_rate": 0.001,
+    "n_epochs": 20,
+    "batch_size": 16,
+    "weights_decay": "uni",
+    "loss": "horizon_weighted_huber",
+    "device": "cpu"
 }

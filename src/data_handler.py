@@ -1,6 +1,11 @@
 import numpy as np
 import pandas as pd
 import json
+import os
+
+from src.direct_models import *
+from src.mheme import *
+from src.config_files import *
 
 from statsmodels.tsa.statespace.tools import diff
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
@@ -208,10 +213,10 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
     
     X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
     # Split data
-    train, val, test = train_validation_test_split(X_slide, y_slide, prop=prop, shuffle=shuffle, random_state=random_state)  
+    train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle=shuffle, random_state=random_state)  
 
     # return train, val, test
-    return train, val, test
+    return train, val, test, X, data
 
 
 def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
@@ -227,26 +232,38 @@ def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
     return time_series
 
 
-def data_scaler(time_series: np.ndarray, type : str = 'rob') -> np.ndarray:
+def data_scaler(time_series: np.ndarray, scaler_type : str = 'rob') -> np.ndarray:
     """
     Applies a scaler to the time series data.
     Params:
     - time_series : array of shape (n_samples,)
     - type : string, type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
     """
-    assert type in ['rob', 'std', 'minmax'], f"type {type} not recognized. Choose among 'rob', 'std', 'minmax'"
+    assert scaler_type in ['rob', 'std', 'minmax'], f"type {scaler_type} not recognized. Choose among 'rob', 'std', 'minmax'"
 
-    time_series = time_series.reshape(-1, 1)
-    if type == 'rob':
+    was_1d = False
+    if hasattr(time_series, 'ndim') and time_series.ndim == 1:
+        was_1d = True
+        # If is pd.Series use .values.reshape. If is np.ndarray use .reshape
+        values_2d = time_series.values.reshape(-1, 1) if hasattr(time_series, 'values') else time_series.reshape(-1, 1)
+    else:
+        # Is already 2D (e.g., is a multivariate matrix)
+        values_2d = time_series
+    
+    if scaler_type == 'rob':
         scaler = RobustScaler()
-    elif type == 'std':
+    elif scaler_type == 'std':
         scaler = StandardScaler()
     else:
         scaler = MinMaxScaler()
 
-    time_series = scaler.fit_transform(time_series).flatten()
-    return time_series
+    scaled_data = scaler.fit_transform(values_2d)
 
+    if was_1d:
+        return scaled_data.flatten()
+    else:
+        return scaled_data
+        
 
 def data_differentiator(time_series: np.ndarray, diff_order: list[int]) -> np.ndarray:
     """
@@ -348,7 +365,7 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
     id_target = config[dataset]['id_target']
 
     try:
-        data = pd.read_csv(dataset_path)
+        data = pd.read_csv(dataset_path, parse_dates=[date_col])    
     except FileNotFoundError as e:
         print(f"Error: {e}")
         raise
@@ -370,19 +387,19 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
 
     
 
-def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, model_type : list[str] | str, weights_type : list[str] | str, config_model_paths : list[str] | str,  **kwargs) -> dict:
+def models_definer(dataset_init : list[str], loss_type : list[str], model_type : list[str], weight_type : list[str], config_model_paths : list[str],  **kwargs) -> dict:
     """
     Defines data models for a given dataset.
 
     Params:
     - dataset_init : str or list of str, initial letter(s) of the dataset. Supported: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
-    - loss_type : str or list of str, type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
-    - model_type : str or list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
-    - weights_type : str or list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
-    - config_model_paths : str or list of str, path(s) to the model configuration file(s)
+    - loss_type : list of str, type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
+    - model_type : list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
+    - weight_type : list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
+    - config_model_paths : list of str, path(s) to the model configuration file(s)
     - **kwargs : keyword arguments for model characteristics non-specific for the training phase
-        - horizon : int or list of int, forecast horizon. Default 12
-        - window : int or list of int, input window size. Default 48
+        - horizon : list of int, forecast horizon. Default 12
+        - window : list of int, input window size. Default 48
         - base_model : str, base model for UMHEMe. Supported: 'TCN', 'XGBoost'
         - skip : int, skip parameter for UMHEMe. Default 1
 
@@ -392,34 +409,35 @@ def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, 
     Notes:
     
     """
-    assert dataset_init in ['e', 's', 't', 'v', 'w'], f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-    assert loss_type in ['horizon_weighted_huber', 'mse'], f"Loss type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
-    assert model_type in ['TCN', 'XGBoost', 'ARIMA', 'UMHEMe'], f"Model type {model_type} not recognized. Choose among 'TCN', 'XGBoost', 'ARIMA', 'UMHEMe'"
-    assert weights_type in ['uni', 'soft_lin', 'strong_lin', 'exp'], f"Weights type {weights_type} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
+    assert all(dataset in ['e', 's', 't', 'v', 'w'] for dataset in dataset_init), f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    assert all(loss in ['horizon_weighted_huber', 'mse'] for loss in loss_type), f"Loss type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
+    assert all(model in ['TCN', 'XGBoost', 'ARIMA', 'UMHEMe'] for model in model_type), f"Model type {model_type} not recognized. Choose among 'TCN', 'XGBoost', 'ARIMA', 'UMHEMe'"
+    assert all(weight in ['uni', 'soft_lin', 'strong_lin', 'exp'] for weight in weight_type), f"Weights type {weight_type} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
+    if len(dataset_init) >= 2:
+        assert len(dataset_init) == len(kwargs.get('window', 48)), f"You must put a window for each dataset!"
+        assert len(dataset_init) == len(kwargs.get('horizon', 12)), f"You must put an horizon for each dataset!"
     
     models_for_each_dataset = []
 
-    for i, ds in dataset_init if isinstance(dataset_init, list) else [dataset_init]:
+    for i, ds in enumerate(dataset_init):
         models = {}
+        dataset_window = kwargs.get('window', 48)[i] if isinstance(kwargs.get('window'), list) else kwargs.get('window', 48)
+        dataset_horizon = kwargs.get('horizon', 12)[i] if isinstance(kwargs.get('horizon'), list) else kwargs.get('horizon', 12)
 
-        for loss in loss_type if isinstance(loss_type, list) else [loss_type]:
-            for j, model in model_type if isinstance(model_type, list) else [model_type]:
-                for weights in weights_type if isinstance(weights_type, list) else [weights_type]:
+        for loss in loss_type:
+            for j, model in enumerate(model_type):
+                for weights in weight_type:
                     # Modify json config file
-                    json_handler(file_path = config_model_paths[j], weights_decay = weights, loss_type = loss, horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i])
+                    json_handler(file_path = config_model_paths[j], weights_decay = weights, loss_type = loss, horizon = dataset_horizon, window = dataset_window)
                     
                     # Define model
                     if model == 'TCN':
-                        from direct_models import TCN
-                        models[f'TCN_{loss}_{weights}'] = TCN(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_paths[j])
+                        models[f'TCN_{loss}_{weights}'] = TCN(horizon = dataset_horizon, window = dataset_window, file_path = config_model_paths[j])
                     elif model == 'XGBoost':
-                        from direct_models import XGBoost
-                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_paths[j])
+                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(horizon = dataset_horizon, window = dataset_window, file_path = config_model_paths[j])
                     elif model == 'ARIMA':
-                        from direct_models import ARIMA
-                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], file_path = config_model_paths[j])
+                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(horizon = dataset_horizon, window = dataset_window, file_path = config_model_paths[j])
                     else:  # UMHEMe
-                        from mheme import UMHEMe
                         base_model_class = None
                         if 'base_model' in kwargs:
                             if kwargs['base_model'] == 'TCN':
@@ -427,7 +445,7 @@ def models_definer(dataset_init : list[str] | str, loss_type : list[str] | str, 
                             else:  # XGBoost
                                 base_model_class = XGBoost
 
-                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = kwargs.get('horizon', 12)[i], window = kwargs.get('window', 48)[i], model_class = base_model_class, config_path = config_model_paths[j], skip = kwargs.get('skip', 1))
+                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, window = dataset_window, model_class = base_model_class, config_path = config_model_paths[j], skip = kwargs.get('skip', 1))
                         
         models_for_each_dataset.append(models)      
     
@@ -449,36 +467,40 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
     - models_path_save : string, path to save the trained models
     """
 
-    for model in models:
-        print(f"\n\nTrain model: {model}")
-        model.fit(train[0], train[1])
+    for model_name, model_instance in models.items():
+        
+        print(f"\n\nTrain model: {model_name}")
+        model_instance.fit(train[0], train[1])
 
         # if model is UMHEME, compute weights
-        if str(model).__contains__("UMHEMe"):
-            model.compute_weights(train[0], train[1])
+        if "UMHEMe" in model_name:
+            model_instance.compute_weights(train[0], train[1])
 
         if save_models:
-            model.save_model(f"{models_path_save}/{str(model)}_{dataset_init}.model")
+            os.makedirs(models_path_save, exist_ok=True)
+            model_instance.save_model(f"{models_path_save}/{model_name}_{dataset_init}.pkl")
 
     return 
 
     
-def models_evaluator(models : dict, test : list[np.ndarray] | None):
+def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     """
     Evaluates data models for a given dataset.
 
     Params:
     - models : dictionary of fitted models to evaluate
-    - test : tuple, test set (X_test, y_test)
+    - test : tuple, test set (X_test, y_test)ù
+    - dataset_init : str, ini
     """
     results = {}
     print("\n\nTest set evaluation:")
-    for model in models:
-        print(f"\nEvaluate model: {model}")
-        if str(model).__contains__("UMHEMe"):
-            results[str(model)] = (model.predict(test[0]), model.whole_predict(test[0]))
+    for model_name, model_instance in models.items():
+        print(f"\nEvaluate model: {model_name}")
+        
+        if "UMHEMe" in model_name:
+            results[model_name] = (model_instance.predict(test[0]), model_instance.whole_predict(test[0]))
         else:
-            results[str(model)] = model.predict(test[0])
+            results[model_name] = model_instance.predict(test[0])
 
     return results
     

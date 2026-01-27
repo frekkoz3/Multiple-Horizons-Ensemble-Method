@@ -1,11 +1,10 @@
 {
-    "window": 24,
-    "horizon": 12,
-
+    "window": 168,
+    "horizon": 24,
     "n_estimators": 1,
     "max_depth": 6,
     "learning_rate": 0.1,
-    "device" : "cpu",
-
-    "loss": "horizon_weighted_huber"
+    "device": "cpu",
+    "loss": "horizon_weighted_huber",
+    "weights_decay": "uni"
 }

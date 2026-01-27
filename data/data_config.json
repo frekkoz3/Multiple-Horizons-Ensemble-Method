@@ -8,7 +8,7 @@
     "window": 168,
     "horizon": 24,
     "aggregator": false,
-    "differentiatior": false,
+    "differentiator": false,
     "scaler": true,
     "scaler_type": "rob",
     "filler": false
@@ -22,7 +22,7 @@
     "window": 48,
     "horizon": 24,
     "aggregator": true,
-    "aggregator_window": 6,
+    "aggregator_window": "1h",
     "differentiator": false,
     "scaler": true,
     "scaler_type": "rob",
