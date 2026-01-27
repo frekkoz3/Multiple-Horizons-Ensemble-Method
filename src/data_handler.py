@@ -398,7 +398,7 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
         raise
 
 
-def dataset_handler(dataset_init : str, data_path : str, data_config_path : str, prop : tuple = (0.6, 0.2, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
+def dataset_handler(dataset_init : str, data_path : str, data_config_path : str, is_arima : bool = False, prop : tuple = (0.6, 0.2, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
     """
     Handles data loading, preprocessing, and splitting for a given dataset.
     
@@ -406,6 +406,7 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
     - dataset_init : string, initials of the dataset to load
     - data_path : string, path to the configuration file
     - data_config_path : string, path to the data configuration file
+    - is_arima : boolean, whether the model to be used is ARIMA
     - prop : tuple, proportions for train/val/test split
     - shuffle_data : boolean, whether to shuffle data before splitting
     - shuffle_internal : boolean, whether to shuffle data after splitting
@@ -415,6 +416,8 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
     - train : tuple, training set (X_train, y_train)
     - val : tuple, validation set (X_val, y_val)
     - test : tuple, test set (X_test, y_test)
+    - X : np.ndarray, preprocessed time series used for training/testing
+    - data : pd.DataFrame, original dataframe loaded from csv
 
     Notes:
     data_config_path must contain the following preprocessing parameters for each dataset:
@@ -429,6 +432,13 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
         - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
         - filler : whether to apply missing value filling
         - filler_type : method to fill missing values ('linear', 'cubic', 'spline')
+
+    ARIMA models work differently, as they do not need sliding windows. In this case, the function returns:
+        - train : tuple, training set (X_train, None) where X_train is the whole series used for training
+        - val : None    
+        - test : tuple, test set (X_test, None) where X_test is the whole series used for testing
+        - X : np.ndarray, preprocessed time series used for training/testing
+        - data : pd.DataFrame, original dataframe loaded from csv
     """
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
@@ -447,12 +457,20 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
     with open(data_config_path, 'r') as f:
         config = json.load(f)
     
-    X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
-    # Split data
-    train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle_data=shuffle_data, shuffle_internal=shuffle_internal, random_state=random_state)  
+    if not is_arima:
+        X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
+        # Split data
+        train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle_data=shuffle_data, shuffle_internal=shuffle_internal, random_state=random_state)  
 
-    # return train, val, test
-    return train, val, test, X, data
+        # return train, val, test
+        return train, val, test, X, data
+
+    else: # we are working with ARIMA. We do not want sliding windows, but the whole series with size prop[0]+prop[1] as "train" and prop[2] as "test"
+        n_samples = X.shape[0]
+        n_train = int(n_samples * (prop[0] + prop[1]))
+        X_train = X[:n_train]
+        X_test = X[n_train:]
+        return (X_train, None), None, (X_test, None), X, data
     
 
 if __name__ == '__main__':

@@ -306,22 +306,45 @@ class ARIMAModel(DirectModel):
                 self.Q = config['Q']
 
 
-    def fit( y : np.ndarray):
+    def fit(self, y: np.ndarray):
         if self.auto_arima:
-            self.model = pm.auto_arima(y = y, m = self.seasonality)
-            return
+            self.model = pm.auto_arima(y=y, m=self.seasonality)
         else:
+            # Statsmodels definition
             if self.seasonality == 1:
-                self.model = ARIMA(endog = y, order=(self.p, self.d, self.q))
+                model_def = ARIMA(endog=y, order=(self.p, self.d, self.q))
             else:
-                self.model = ARIMA(endog = y, order=(self.p, self.d, self.q), seasonal_order = (self.P, self.D, self.Q, self.seasonality))
-            self.model.fit()
+                model_def = ARIMA(endog=y, order=(self.p, self.d, self.q), 
+                                  seasonal_order=(self.P, self.D, self.Q, self.seasonality))
+            self.model = model_def.fit()
+            
             return self.model.summary()
 
-    def predict(y : np.ndarray):
-        self.model.predict(n_periods = self.horizon)
 
-        return
+    def predict(self, test: np.ndarray):
+        y_hat = []
+        
+        for t in range(len(test)):
+            
+            # forecast
+            if self.auto_arima:
+                # Pmdarima uses predict
+                forecast = self.model.predict(n_periods=self.horizon)
+            else:
+                # Statsmodels uses forecast
+                forecast = self.model.forecast(steps=self.horizon)
+            
+            y_hat.append(forecast)
+
+            # update ARIMA with REAL value ---
+            true_value = test[t]
+
+            if self.auto_arima:
+                self.model.update(true_value)
+            else:
+                self.model = self.model.append([true_value], refit=False)
+
+        return np.array(y_hat)
         
                 
 
