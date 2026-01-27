@@ -135,16 +135,16 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     return day
 
 
-def json_handler(file_path : str, weights_decay : str, loss_type : str, horizon : int, window : int):
+def json_handler(file_path : str, weights_decay : str | None = None, loss_type : str | None = None, horizon : int | None = None, window : int | None = None):
     """
     Load a json file and modifies its content as a dictionary.
 
     Params:
-    - file_path : string, path to the json file
-    - weights_decay : string, type of weights decay to be used in the model
-    - loss_type : string, type of loss function to be used in the model
-    - horizon : integer, the length of the horizon forecasting
-    - window : integer, the length of the window for predictions
+    - file_path : str, path to the json file
+    - weights_decay : str, type of weights decay to be used in the model
+    - loss_type : str, type of loss function to be used in the model
+    - horizon : int, the length of the horizon forecasting
+    - window : int, the length of the window for predictions
 
     """
 
@@ -152,18 +152,22 @@ def json_handler(file_path : str, weights_decay : str, loss_type : str, horizon 
         config = json.load(f)
 
     assert weights_decay in ["uni", "soft_lin", "strong_lin", "exp"], f"weights_decay {weights_decay} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
-    config['weights_decay'] = weights_decay
-    assert loss_type in ["horizon_weighted_huber", "mse"], f"loss_type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
-    config['loss'] = loss_type
+    if weights_decay is not None:
+        config['weights_decay'] = weights_decay
+    if loss_type is not None:
+        assert loss_type in ["horizon_weighted_huber", "mse"], f"loss_type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
+        config['loss'] = loss_type
 
-    config['horizon'] = horizon
-    config['window'] = window
+    if horizon is not None:
+        config['horizon'] = horizon
+    if window is not None:
+        config['window'] = window
 
     # save the modified config back to the json file
     with open(file_path, 'w') as f:
         json.dump(config, f, indent=4)
 
-    print(f"Configuration file {file_path} modified: weights_decay set to {weights_decay}, loss set to {loss_type}")
+    print(f"Configuration file {file_path} modified")
     return
 
 
@@ -397,46 +401,36 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
     - model_type : list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
     - weight_type : list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
     - config_model_paths : list of str, path(s) to the model configuration file(s)
-    - **kwargs : keyword arguments for model characteristics non-specific for the training phase
-        - horizon : list of int, forecast horizon. Default 12
-        - window : list of int, input window size. Default 48
+    - **kwargs : keyword arguments for UMHEMe characteristics
         - base_model : str, base model for UMHEMe. Supported: 'TCN', 'XGBoost'
         - skip : int, skip parameter for UMHEMe. Default 1
 
     Returns:
-    - models : dictionary of models defined for the dataset. For many datasets, returns a list of dictionaries. Dictionaries are always return in the same order of dataset_init 
-
-    Notes:
-    
+    - models : dictionary of models defined for the dataset. For many datasets, returns a list of dictionaries. Dictionaries are always return in the same order of dataset_init     
     """
     assert all(dataset in ['e', 's', 't', 'v', 'w'] for dataset in dataset_init), f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
     assert all(loss in ['horizon_weighted_huber', 'mse'] for loss in loss_type), f"Loss type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
     assert all(model in ['TCN', 'XGBoost', 'ARIMA', 'UMHEMe'] for model in model_type), f"Model type {model_type} not recognized. Choose among 'TCN', 'XGBoost', 'ARIMA', 'UMHEMe'"
     assert all(weight in ['uni', 'soft_lin', 'strong_lin', 'exp'] for weight in weight_type), f"Weights type {weight_type} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
-    if len(dataset_init) >= 2:
-        assert len(dataset_init) == len(kwargs.get('window', 48)), f"You must put a window for each dataset!"
-        assert len(dataset_init) == len(kwargs.get('horizon', 12)), f"You must put an horizon for each dataset!"
     
     models_for_each_dataset = []
 
     for i, ds in enumerate(dataset_init):
         models = {}
-        dataset_window = kwargs.get('window', 48)[i] if isinstance(kwargs.get('window'), list) else kwargs.get('window', 48)
-        dataset_horizon = kwargs.get('horizon', 12)[i] if isinstance(kwargs.get('horizon'), list) else kwargs.get('horizon', 12)
 
         for loss in loss_type:
             for j, model in enumerate(model_type):
                 for weights in weight_type:
                     # Modify json config file
-                    json_handler(file_path = config_model_paths[j], weights_decay = weights, loss_type = loss, horizon = dataset_horizon, window = dataset_window)
+                    json_handler(file_path = config_model_paths[j], weights_decay = weights, loss_type = loss)
                     
                     # Define model
                     if model == 'TCN':
-                        models[f'TCN_{loss}_{weights}'] = TCN(horizon = dataset_horizon, window = dataset_window, file_path = config_model_paths[j])
+                        models[f'TCN_{loss}_{weights}'] = TCN(file_path = config_model_paths[j])
                     elif model == 'XGBoost':
-                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(horizon = dataset_horizon, window = dataset_window, file_path = config_model_paths[j])
+                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(file_path = config_model_paths[j])
                     elif model == 'ARIMA':
-                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(horizon = dataset_horizon, window = dataset_window, file_path = config_model_paths[j])
+                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(file_path = config_model_paths[j])
                     else:  # UMHEMe
                         base_model_class = None
                         if 'base_model' in kwargs:
@@ -444,6 +438,13 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
                                 base_model_class = TCN
                             else:  # XGBoost
                                 base_model_class = XGBoost
+
+                            # Need of horizon and window from CONFIG_MODEL_PATH:
+                            with open(config_model_paths[j], 'r') as f:
+                                config = json.load(f)
+
+                            dataset_window = config['window']
+                            dataset_horizon = config['horizon']
 
                             models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, window = dataset_window, model_class = base_model_class, config_path = config_model_paths[j], skip = kwargs.get('skip', 1))
                         

@@ -63,7 +63,7 @@ class DirectModel:
 
 
 class TCN(nn.Module, DirectModel):
-    def __init__(self, horizon : int | None, window : int | None, file_path: str):
+    def __init__(self, file_path: str, horizon : int | None = None, window : int | None = None):
         nn.Module.__init__(self)
 
         with open(file_path, 'r') as file:

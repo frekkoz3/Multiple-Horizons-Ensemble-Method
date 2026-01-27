@@ -49,7 +49,7 @@ class UMHEMe:
         self.horizon = horizon
         self.window = window
         self.skip = skip
-        self.models = [model_class(h, config_path) for h in range(1, horizon + 1, skip)]
+        self.models = [model_class(horizon = h, file_path = config_path) for h in range(1, horizon + 1, skip)]
         self.weights = np.ones(shape = (len(self.models), self.horizon)) # n_models x horizon
 
 

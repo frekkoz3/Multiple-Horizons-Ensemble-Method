@@ -1,6 +1,6 @@
 {
-    "window": 168,
-    "horizon": 24,
+    "window": 30,
+    "horizon": 14,
     "n_layers": 2,
     "inner_layers_dim": [
         16,
@@ -16,7 +16,7 @@
     "learning_rate": 0.001,
     "n_epochs": 20,
     "batch_size": 16,
-    "weights_decay": "uni",
+    "weights_decay": "exp",
     "loss": "horizon_weighted_huber",
     "device": "cpu"
 }
