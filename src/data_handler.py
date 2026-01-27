@@ -11,84 +11,6 @@ from statsmodels.tsa.statespace.tools import diff
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
    
 
-def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state: int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
-    """
-        Split a temporal dataset into train, validation, and test set. No shuffle
-
-        Params :
-        - X : set of inputs of shape number_of_series x window
-        - y : set of ground truth of shape number_of_series x horizon
-        - proportion : tuple containing the proportion of data to be stored in the train set, in the validation set, in the test set
-        - shuffle : whether to shuffle samples before splitting
-        - random_state : seed for reproducibility (used if shuffle=True)
-
-        Return :
-        - (X_train, y_train), (X_val, y_val), (X_test, y_test)
-    """
-    assert X.shape[0] == y.shape[0], "X and y must have same number of samples"
-    assert len(proportions) == 3, "proportions must have length 3"
-
-    p_train, p_val, p_test = proportions
-    assert np.isclose(p_train + p_val + p_test, 1.0), "proportions must sum to 1"
-
-    n = X.shape[0]
-
-    if shuffle:
-        assert random_state is not None, "if data are shuffled, random_state must be initialized"
-        rng = np.random.default_rng(random_state)
-        idx = rng.permutation(n)
-        X = X[idx]
-        y = y[idx]
-
-    n_train = int(n * p_train)
-    n_val   = int(n * p_val)
-
-    X_train = X[:n_train]
-    y_train = y[:n_train]
-
-    X_val = X[n_train:n_train + n_val]
-    y_val = y[n_train:n_train + n_val]
-
-    X_test = X[n_train + n_val:]
-    y_test = y[n_train + n_val:]
-
-    return (X_train, y_train), (X_val, y_val), (X_test, y_test)
-
-
-def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 1) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Split a 1D time series into sliding windows of size (window + horizon).
-    Each window produces (X, y) with length `window` and `horizon` respectively.
-    Windows are separated by lag `k`.
-
-    Params:
-    - time_series : array of shape (n_samples,)
-    - window : length of input window
-    - horizon : length of output horizon
-    - k : step between sliding windows
-
-    Returns:
-    - X : array of shape (n_windows, window)
-    - y : array of shape (n_windows, horizon)
-    """
-    time_series = np.asarray(time_series)
-    n_samples = len(time_series)
-
-    n_windows = (n_samples - window - horizon) // k + 1
-    if n_windows <= 0:
-        raise ValueError("Time series too short for the given window and horizon.")
-
-    X = np.zeros((n_windows, window))
-    y = np.zeros((n_windows, horizon))
-
-    for i in range(n_windows):
-        start = i * k
-        X[i] = time_series[start : start + window]
-        y[i] = time_series[start + window : start + window + horizon]
-
-    return X, y
-
-
 def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_path : str, proportions : tuple=(0.6, 0.2, 0.2), shuffled : bool = False, random_state : int | None = None) -> str :
     """
     Given a series and an index of the series among the whole dataset, returns the day (and possibly the hour) of the first element of the series.
@@ -171,58 +93,6 @@ def json_handler(file_path : str, weights_decay : str | None = None, loss_type :
     return
 
 
-def dataset_handler(dataset_init : str, data_path : str, data_config_path : str, prop : tuple = (0.6, 0.2, 0.2), shuffle : bool = False, random_state : int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
-    """
-    Handles data loading, preprocessing, and splitting for a given dataset.
-    
-    Params:
-    - dataset_init : string, initials of the dataset to load
-    - data_path : string, path to the configuration file
-    - data_config_path : string, path to the data configuration file
-    - prop : tuple, proportions for train/val/test split
-    - shuffle : boolean, whether to shuffle data before splitting
-    - random_state : integer or None, random state for reproducibility if shuffle is True
-
-    Returns:
-    - train : tuple, training set (X_train, y_train)
-    - val : tuple, validation set (X_val, y_val)
-    - test : tuple, test set (X_test, y_test)
-
-    Notes:
-    data_config_path must contain the following preprocessing parameters for each dataset:
-        - window : length of input window for sliding window. Default 48
-        - horizon : length of output horizon for sliding window. Default 12
-
-        - aggregator : whether to apply time aggregation
-        - aggregator_window : window size for time aggregation
-        - differentiator : whether to apply differentiation
-        - differentiator_orders : array of shape (2), differentiation order and seasonal order
-        - scaler : whether to apply scaling
-        - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
-        - filler : whether to apply missing value filling
-        - filler_type : method to fill missing values ('linear', 'cubic', 'spline')
-    """
-    datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
-    assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-    dataset = datasets[dataset_init]
-
-    # Load data
-    X, data = data_loader(data_path = data_path, data_config_path = data_config_path, dataset_init = dataset_init)
-    # Preprocess data
-    X = data_preprocessing(X, data_config_path = data_config_path, dataset_init = dataset_init)
-
-    # Create sliding windows
-    with open(data_config_path, 'r') as f:
-        config = json.load(f)
-    
-    X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
-    # Split data
-    train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle=shuffle, random_state=random_state)  
-
-    # return train, val, test
-    return train, val, test, X, data
-
-
 def data_filler(time_series: np.ndarray, method: str = 'spline') -> np.ndarray:
     """
     Fill missing NaN values in the time series data.
@@ -291,6 +161,144 @@ def data_time_aggregator(time_series: np.ndarray, freq: str) -> np.ndarray:
     time_series = pd.Series(time_series).resample(freq).mean().to_numpy()
 
     return time_series
+
+
+def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state: int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
+    """
+        Split a temporal dataset into train, validation, and test set. No shuffle
+
+        Params :
+        - X : set of inputs of shape number_of_series x window
+        - y : set of ground truth of shape number_of_series x horizon
+        - proportion : tuple containing the proportion of data to be stored in the train set, in the validation set, in the test set
+        - shuffle_data : whether to shuffle samples before splitting
+        - shuffle_internal : whether to shuffle samples within each split
+        - random_state : seed for reproducibility (used if shuffle=True)
+
+        Return :
+        - (X_train, y_train), (X_val, y_val), (X_test, y_test)
+    """
+    assert X.shape[0] == y.shape[0], "X and y must have same number of samples"
+    assert len(proportions) == 3, "proportions must have length 3"
+
+    p_train, p_val, p_test = proportions
+    assert np.isclose(p_train + p_val + p_test, 1.0), "proportions must sum to 1"
+
+    n = X.shape[0]
+
+    if shuffle_data:
+        assert random_state is not None, "if data are shuffled before splitting, random_state must be initialized"
+        rng = np.random.default_rng(random_state)
+        idx = rng.permutation(n)
+        X = X[idx]
+        y = y[idx]
+
+    n_train = int(n * p_train)
+    n_val   = int(n * p_val)
+
+    X_train = X[:n_train]
+    y_train = y[:n_train]
+
+    X_val = X[n_train:n_train + n_val]
+    y_val = y[n_train:n_train + n_val]
+
+    X_test = X[n_train + n_val:]
+    y_test = y[n_train + n_val:]
+
+    if shuffle_internal:
+        assert random_state is not None, "if data are shuffled internally of the splits, random_state must be initialized"
+        rng = np.random.default_rng(random_state)
+
+        idx_train = rng.permutation(X_train.shape[0])
+        X_train = X_train[idx_train]
+        y_train = y_train[idx_train]
+
+        idx_val = rng.permutation(X_val.shape[0])
+        X_val = X_val[idx_val]
+        y_val = y_val[idx_val]
+
+        idx_test = rng.permutation(X_test.shape[0])
+        X_test = X_test[idx_test]
+        y_test = y_test[idx_test]
+
+
+    return (X_train, y_train), (X_val, y_val), (X_test, y_test)
+
+
+def sliding_window(time_series: np.ndarray, window: int, horizon: int, k: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Split a 1D time series into sliding windows of size (window + horizon).
+    Each window produces (X, y) with length `window` and `horizon` respectively.
+    Windows are separated by lag `k`.
+
+    Params:
+    - time_series : array of shape (n_samples,)
+    - window : length of input window
+    - horizon : length of output horizon
+    - k : step between sliding windows
+
+    Returns:
+    - X : array of shape (n_windows, window)
+    - y : array of shape (n_windows, horizon)
+    """
+    time_series = np.asarray(time_series)
+
+    # CASE 1: 1D Time series
+    if time_series.ndim == 1:
+        n_samples = len(time_series)
+        n_windows = (n_samples - window - horizon) // k + 1
+        
+        if n_windows <= 0:
+            raise ValueError("Time series too short for the given window and horizon.")
+    
+        X = np.zeros((n_windows, window))
+        y = np.zeros((n_windows, horizon))
+    
+        for i in range(n_windows):
+            start = i * k
+            X[i] = time_series[start : start + window]
+            y[i] = time_series[start + window : start + window + horizon]
+    
+        return X, y
+
+    elif time_series.ndim == 2:
+        n_ids, n_samples = time_series.shape
+        X_list = []
+        y_list = []
+        
+        # Iterate over each ID (row)
+        for i in range(n_ids):
+            single_series = time_series[i, :]
+            
+            # Calculate number of windows for this specific series
+            n_windows = (n_samples - window - horizon) // k + 1
+            
+            if n_windows > 0:
+                # Use the logic from Case 1 for this row
+                X_i = np.zeros((n_windows, window))
+                y_i = np.zeros((n_windows, horizon))
+                
+                valid_windows = True
+                
+                for j in range(n_windows):
+                    start = j * k
+                    X_i[j] = single_series[start : start + window]
+                    y_i[j] = single_series[start + window : start + window + horizon]
+                
+                X_list.append(X_i)
+                y_list.append(y_i)
+        
+        # Vertically stack all results
+        if not X_list:
+            raise ValueError("No valid windows generated from the provided matrix.")
+            
+        X_total = np.vstack(X_list)
+        y_total = np.vstack(y_list)
+        
+        return X_total, y_total
+    
+    else:
+        raise ValueError("time_series must be 1D or 2D array.")
 
 
 def data_preprocessing(time_series: np.ndarray, data_config_path : str, dataset_init : str, aggregator : bool = False, aggregator_window : int = 1, differentiator : bool = False, differentiator_orders : list = [1, 0, 24], scaler : bool = False, scaler_type : str = 'rob', filler : bool = False, filler_type : str = 'splines') -> np.ndarray:
@@ -389,127 +397,62 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
         print(f"Error: {e}")
         raise
 
-    
 
-def models_definer(dataset_init : list[str], loss_type : list[str], model_type : list[str], weight_type : list[str], data_config_path : str, model_config_paths : list[str],  **kwargs) -> dict:
+def dataset_handler(dataset_init : str, data_path : str, data_config_path : str, prop : tuple = (0.6, 0.2, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:
     """
-    Defines data models for a given dataset.
-
+    Handles data loading, preprocessing, and splitting for a given dataset.
+    
     Params:
-    - dataset_init : str or list of str, initial letter(s) of the dataset. Supported: 'e' for electricity, 's' for solar, 't' for traffic, 'v' for volatility, 'w' for wind
-    - loss_type : list of str, type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
-    - model_type : list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
-    - weight_type : list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
-    - data_config_path : str, path to the dataset configuration file
-    - model_config_paths : list of str, path(s) to the model configuration file(s)
-    - **kwargs : keyword arguments for UMHEMe characteristics
-        - base_model : str, base model for UMHEMe. Supported: 'TCN', 'XGBoost'
-        - skip : int, skip parameter for UMHEMe. Default 1
+    - dataset_init : string, initials of the dataset to load
+    - data_path : string, path to the configuration file
+    - data_config_path : string, path to the data configuration file
+    - prop : tuple, proportions for train/val/test split
+    - shuffle_data : boolean, whether to shuffle data before splitting
+    - shuffle_internal : boolean, whether to shuffle data after splitting
+    - random_state : integer or None, random state for reproducibility if shuffle is True
 
     Returns:
-    - models : dictionary of models defined for the dataset. For many datasets, returns a list of dictionaries. Dictionaries are always return in the same order of dataset_init     
+    - train : tuple, training set (X_train, y_train)
+    - val : tuple, validation set (X_val, y_val)
+    - test : tuple, test set (X_test, y_test)
+
+    Notes:
+    data_config_path must contain the following preprocessing parameters for each dataset:
+        - window : length of input window for sliding window. Default 48
+        - horizon : length of output horizon for sliding window. Default 12
+
+        - aggregator : whether to apply time aggregation
+        - aggregator_window : window size for time aggregation
+        - differentiator : whether to apply differentiation
+        - differentiator_orders : array of shape (2), differentiation order and seasonal order
+        - scaler : whether to apply scaling
+        - scaler_type : type of scaler to apply ('rob' for RobustScaler, 'std' for StandardScaler, 'minmax' for MinMaxScaler)
+        - filler : whether to apply missing value filling
+        - filler_type : method to fill missing values ('linear', 'cubic', 'spline')
     """
-    assert all(dataset in ['e', 's', 't', 'v', 'w'] for dataset in dataset_init), f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-    assert all(loss in ['horizon_weighted_huber', 'mse'] for loss in loss_type), f"Loss type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
-    assert all(model in ['TCN', 'XGBoost', 'ARIMA', 'UMHEMe'] for model in model_type), f"Model type {model_type} not recognized. Choose among 'TCN', 'XGBoost', 'ARIMA', 'UMHEMe'"
-    assert all(weight in ['uni', 'soft_lin', 'strong_lin', 'exp'] for weight in weight_type), f"Weights type {weight_type} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
-    models_names = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    dataset = datasets[dataset_init]
+
+    # Load data
+    X, data = data_loader(data_path = data_path, data_config_path = data_config_path, dataset_init = dataset_init)
+    # Preprocess data
+    X = data_preprocessing(X, data_config_path = data_config_path, dataset_init = dataset_init)
+
+    # if X is 2D (Multiple series) is currently (Time, IDs)
+    if X.ndim == 2:
+        X = X.T
+
+    # Create sliding windows
+    with open(data_config_path, 'r') as f:
+        config = json.load(f)
     
-    
-    models_for_each_dataset = []
+    X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
+    # Split data
+    train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle_data=shuffle_data, shuffle_internal=shuffle_internal, random_state=random_state)  
 
-    for i, ds in enumerate(dataset_init):
-        models = {}
-
-        for loss in loss_type:
-            for j, model in enumerate(model_type):
-                for weights in weight_type:
-                    # Modify json config file accordingly to the respective information provided
-                    with open(data_config_path, 'r') as f:
-                        data_config = json.load(f)
-                        
-                    json_handler(file_path = model_config_paths[j], weights_decay = weights, loss_type = loss, horizon = data_config[models_names[ds]]['horizon'], window = data_config[models_names[ds]]['window'])
-                    
-                    # Define model
-                    if model == 'TCN':
-                        models[f'TCN_{loss}_{weights}'] = TCN(file_path = model_config_paths[j])
-                    elif model == 'XGBoost':
-                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(file_path = model_config_paths[j])
-                    elif model == 'ARIMA':
-                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(file_path = model_config_paths[j])
-                    else:  # UMHEMe
-                        base_model_class = None
-                        if 'base_model' in kwargs:
-                            if kwargs['base_model'] == 'TCN':
-                                base_model_class = TCN
-                            else:  # XGBoost
-                                base_model_class = XGBoost
-
-                            # Need of horizon and window from CONFIG_MODEL_PATH:
-                            with open(model_config_paths[j], 'r') as f:
-                                config = json.load(f)
-
-                            dataset_window = config['window']
-                            dataset_horizon = config['horizon']
-
-                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, window = dataset_window, model_class = base_model_class, config_path = model_config_paths[j], skip = kwargs.get('skip', 1))
-                        
-        models_for_each_dataset.append(models)      
-    
-    if len(models_for_each_dataset) == 1:
-        return models_for_each_dataset[0]
-
-    return models_for_each_dataset
-
-    
-def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_models : bool = True, models_path_save : str = '../models/'):
-    """
-    Trains data models for a given dataset.
-
-    Params:
-    - models : dictionary of models to train
-    - train : string, name of the dataset to use
-    - dataset_init : string, initials of the dataset to load
-    - save_models : boolean, whether to save the trained models
-    - models_path_save : string, path to save the trained models
-    """
-
-    for model_name, model_instance in models.items():
-        
-        print(f"\n\nTrain model: {model_name}")
-        model_instance.fit(train[0], train[1])
-
-        # if model is UMHEME, compute weights
-        if "UMHEMe" in model_name:
-            model_instance.compute_weights(train[0], train[1])
-
-        if save_models:
-            os.makedirs(models_path_save, exist_ok=True)
-            model_instance.save_model(f"{models_path_save}/{model_name}_{dataset_init}.pkl")
-
-    return 
-
-    
-def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
-    """
-    Evaluates data models for a given dataset.
-
-    Params:
-    - models : dictionary of fitted models to evaluate
-    - test : tuple, test set (X_test, y_test)ù
-    - dataset_init : str, ini
-    """
-    results = {}
-    print("\n\nTest set evaluation:")
-    for model_name, model_instance in models.items():
-        print(f"\nEvaluate model: {model_name}")
-        
-        if "UMHEMe" in model_name:
-            results[model_name] = (model_instance.predict(test[0]), model_instance.whole_predict(test[0]))
-        else:
-            results[model_name] = model_instance.predict(test[0])
-
-    return results
+    # return train, val, test
+    return train, val, test, X, data
     
 
 if __name__ == '__main__':
@@ -536,3 +479,5 @@ if __name__ == '__main__':
         # Change name of X, data based on ds (This is pure flex):
         globals()[f'X_{ds}'] = X
         globals()[f'data_{ds}'] = data
+
+        
