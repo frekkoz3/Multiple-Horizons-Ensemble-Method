@@ -391,7 +391,7 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
 
     
 
-def models_definer(dataset_init : list[str], loss_type : list[str], model_type : list[str], weight_type : list[str], config_model_paths : list[str],  **kwargs) -> dict:
+def models_definer(dataset_init : list[str], loss_type : list[str], model_type : list[str], weight_type : list[str], data_config_path : str, model_config_paths : list[str],  **kwargs) -> dict:
     """
     Defines data models for a given dataset.
 
@@ -400,7 +400,8 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
     - loss_type : list of str, type(s) of loss function to use. Supported: 'horizon_weighted_huber', 'mse'
     - model_type : list of str, type(s) of model to use. Supported: 'TCN', 'XGBoost', 'ARIMA', 'UHMEMe'
     - weight_type : list of str, type(s) of weighting strategy to use. Supported: 'uni', 'soft_lin', 'strong_lin', 'exp'
-    - config_model_paths : list of str, path(s) to the model configuration file(s)
+    - data_config_path : str, path to the dataset configuration file
+    - model_config_paths : list of str, path(s) to the model configuration file(s)
     - **kwargs : keyword arguments for UMHEMe characteristics
         - base_model : str, base model for UMHEMe. Supported: 'TCN', 'XGBoost'
         - skip : int, skip parameter for UMHEMe. Default 1
@@ -412,6 +413,8 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
     assert all(loss in ['horizon_weighted_huber', 'mse'] for loss in loss_type), f"Loss type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
     assert all(model in ['TCN', 'XGBoost', 'ARIMA', 'UMHEMe'] for model in model_type), f"Model type {model_type} not recognized. Choose among 'TCN', 'XGBoost', 'ARIMA', 'UMHEMe'"
     assert all(weight in ['uni', 'soft_lin', 'strong_lin', 'exp'] for weight in weight_type), f"Weights type {weight_type} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
+    models_names = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
+    
     
     models_for_each_dataset = []
 
@@ -421,16 +424,19 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
         for loss in loss_type:
             for j, model in enumerate(model_type):
                 for weights in weight_type:
-                    # Modify json config file
-                    json_handler(file_path = config_model_paths[j], weights_decay = weights, loss_type = loss)
+                    # Modify json config file accordingly to the respective information provided
+                    with open(data_config_path, 'r') as f:
+                        data_config = json.load(f)
+                        
+                    json_handler(file_path = model_config_paths[j], weights_decay = weights, loss_type = loss, horizon = data_config[models_names[ds]]['horizon'], window = data_config[models_names[ds]]['window'])
                     
                     # Define model
                     if model == 'TCN':
-                        models[f'TCN_{loss}_{weights}'] = TCN(file_path = config_model_paths[j])
+                        models[f'TCN_{loss}_{weights}'] = TCN(file_path = model_config_paths[j])
                     elif model == 'XGBoost':
-                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(file_path = config_model_paths[j])
+                        models[f'XGBoost_{loss}_{weights}'] = XGBoost(file_path = model_config_paths[j])
                     elif model == 'ARIMA':
-                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(file_path = config_model_paths[j])
+                        models[f'ARIMA_{loss}_{weights}'] = ARIMA(file_path = model_config_paths[j])
                     else:  # UMHEMe
                         base_model_class = None
                         if 'base_model' in kwargs:
@@ -440,13 +446,13 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
                                 base_model_class = XGBoost
 
                             # Need of horizon and window from CONFIG_MODEL_PATH:
-                            with open(config_model_paths[j], 'r') as f:
+                            with open(model_config_paths[j], 'r') as f:
                                 config = json.load(f)
 
                             dataset_window = config['window']
                             dataset_horizon = config['horizon']
 
-                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, window = dataset_window, model_class = base_model_class, config_path = config_model_paths[j], skip = kwargs.get('skip', 1))
+                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, window = dataset_window, model_class = base_model_class, config_path = model_config_paths[j], skip = kwargs.get('skip', 1))
                         
         models_for_each_dataset.append(models)      
     
