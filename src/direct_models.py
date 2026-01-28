@@ -281,15 +281,15 @@ class XGBoost(DirectModel):
 
 class ARIMAModel(DirectModel):
     """
-    ARIMA and SARIMA models. They are not "direct" but autoregressive models, and thus used only as benchmarks. 
+    ARIMA and SARIMA models. They are notì "direct" but autoregressive models, and thus used only as benchmarks. 
     """
-    def __init__(self, file_path : str, horizon : int | None = None):
+    def __init__(self, horizon : int, file_path : str):
         super().__init__(horizon, file_path)
         
         with open(file_path, 'r') as f:
-            config = json.load(f)
+            json.load(f)
 
-        self.horizon = config['horizon'] if horizon is None else horizon
+        self.horizon = horizon
         self.window = config['window']
 
         # --- Parameters ----

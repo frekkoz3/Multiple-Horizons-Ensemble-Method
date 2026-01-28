@@ -57,7 +57,7 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     return day
 
 
-def json_handler(file_path : str, weights_decay : str | None = None, loss_type : str | None = None, horizon : int | None = None, window : int | None = None):
+def json_handler(file_path : str, weights_decay : str | None = None, loss_type : str | None = None, horizon : int | None = None, window : int | None = None, id_target : str | int | None = None, dataset : str | None = None) -> None:
     """
     Load a json file and modifies its content as a dictionary.
 
@@ -67,18 +67,23 @@ def json_handler(file_path : str, weights_decay : str | None = None, loss_type :
     - loss_type : str, type of loss function to be used in the model
     - horizon : int, the length of the horizon forecasting
     - window : int, the length of the window for predictions
+    - id_target : str or int, the target id value to filter the dataset
 
     """
 
     with open(file_path, 'r') as f:
         config = json.load(f)
 
-    assert weights_decay in ["uni", "soft_lin", "strong_lin", "exp"], f"weights_decay {weights_decay} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
     if weights_decay is not None:
+        assert weights_decay in ["uni", "soft_lin", "strong_lin", "exp"], f"weights_decay {weights_decay} not recognized. Choose among 'uni', 'soft_lin', 'strong_lin', 'exp'"
         config['weights_decay'] = weights_decay
     if loss_type is not None:
         assert loss_type in ["horizon_weighted_huber", "mse"], f"loss_type {loss_type} not recognized. Choose among 'horizon_weighted_huber', 'mse'"
         config['loss'] = loss_type
+
+    if id_target is not None:
+        assert dataset is not None, "if id_target is specified, dataset must be specified too"
+        config[dataset]['id_target'] = id_target
 
     if horizon is not None:
         config['horizon'] = horizon
@@ -497,5 +502,3 @@ if __name__ == '__main__':
         # Change name of X, data based on ds (This is pure flex):
         globals()[f'X_{ds}'] = X
         globals()[f'data_{ds}'] = data
-
-        
