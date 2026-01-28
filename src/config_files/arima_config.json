@@ -1,7 +1,7 @@
 {
     "window": 168,
     "horizon": 24,
-    "auto_arima": true,
+    "auto_arima": false,
     "seasonality": 24,
     "p": 1,
     "d": 1,

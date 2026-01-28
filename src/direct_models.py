@@ -1,6 +1,8 @@
 import numpy as np
 
 import json
+import joblib
+import os
 
 import torch
 import torch.nn as nn
@@ -11,6 +13,8 @@ from tqdm import tqdm
 import xgboost as xgb
 
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.arima.model import ARIMAResults
+
 import pmdarima as pm # used for auto_arima 
 
 
@@ -283,13 +287,13 @@ class ARIMAModel(DirectModel):
     """
     ARIMA and SARIMA models. They are notì "direct" but autoregressive models, and thus used only as benchmarks. 
     """
-    def __init__(self, horizon : int, file_path : str):
+    def __init__(self, file_path : str, horizon : int | None = None):
         super().__init__(horizon, file_path)
         
         with open(file_path, 'r') as f:
-            json.load(f)
+            config = json.load(f)
 
-        self.horizon = horizon
+        self.horizon = config['horizon'] if horizon is None else horizon
         self.window = config['window']
 
         # --- Parameters ----
@@ -336,7 +340,7 @@ class ARIMAModel(DirectModel):
             
             y_hat.append(forecast)
 
-            # update ARIMA with REAL value ---
+            # update ARIMA with REAL value
             true_value = test[t]
 
             if self.auto_arima:
@@ -346,6 +350,35 @@ class ARIMAModel(DirectModel):
 
         return np.array(y_hat)
         
+
+    def save_model(self, path: str):
+        """
+        Saves the fitted model to the specified path.
+        Handles the distinction between pmdarima (joblib) and statsmodels (native save).
+        """
+        if self.model is None:
+            raise ValueError("The model has not been fitted yet.")
+
+        if self.auto_arima:
+            # pmdarima models are standard python objects, best saved with joblib
+            joblib.dump(self.model, path)
+        else:
+            # statsmodels Results objects have a dedicated save method
+            # that handles internal wrappers better than raw pickling
+            self.model.save(path)
+
+    def load_model(self, path: str):
+        """
+        Loads a saved model from disk into self.model.
+        """
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"No model file found at {path}")
+
+        if self.auto_arima:
+            self.model = joblib.load(path)
+        else:
+            # Use the static load method from ARIMAResults
+            self.model = ARIMAResults.load(path)
                 
 
         
