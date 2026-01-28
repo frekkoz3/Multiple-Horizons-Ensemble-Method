@@ -10,5 +10,6 @@
     "D": 1,
     "Q": 1,
     "weights_decay": "uni",
-    "loss": "horizon_weighted_huber"
+    "loss": "horizon_weighted_huber",
+    "skip": 1
 }

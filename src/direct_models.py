@@ -214,8 +214,10 @@ class TCN(nn.Module, DirectModel):
         self.eval()
         with torch.no_grad():
             y_hat = self(X_tensor)
-        return y_hat.cpu().numpy() # Move back to CPU
+        
+        return y_hat.cpu().numpy() # Move back to CP
 
+        
     def save_model(self, file_path: str):
         """
         Save the model's state dictionary to the specified file path.
@@ -309,6 +311,8 @@ class ARIMAModel(DirectModel):
                 self.D = config['D']
                 self.Q = config['Q']
 
+        self.skip = config['skip']
+
 
     def fit(self, y: np.ndarray):
         if self.auto_arima:
@@ -327,8 +331,17 @@ class ARIMAModel(DirectModel):
 
     def predict(self, test: np.ndarray):
         y_hat = []
+        errors = [] 
+
+        #at the beginning, we set in memory the model fitted on the training set + the first self.window values of the test set
+        memory = list(test[:self.window])
+        if self.auto_arima:
+            self.model.update(memory)
+        else:
+            self.model = self.model.append(memory, refit=False)
         
-        for t in range(len(test)):
+
+        for t in range(self.window, len(test), self.skip):
             
             # forecast
             if self.auto_arima:
@@ -339,16 +352,18 @@ class ARIMAModel(DirectModel):
                 forecast = self.model.forecast(steps=self.horizon)
             
             y_hat.append(forecast)
+            errors.append(test[t:t + self.skip] - forecast[:self.skip])
 
-            # update ARIMA with REAL value
-            true_value = test[t]
-
+            # update ARIMA with REAL value ---
+            true_values = list(test[t:t + self.skip])
             if self.auto_arima:
-                self.model.update(true_value)
+                self.model.update(true_values)
             else:
-                self.model = self.model.append([true_value], refit=False)
+                self.model = self.model.append(true_values, refit=False)
 
-        return np.array(y_hat)
+        mse_error = np.mean([np.mean(err**2) for err in errors])
+
+        return mse_error
         
 
     def save_model(self, path: str):
