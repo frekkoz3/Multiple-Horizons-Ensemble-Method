@@ -219,7 +219,7 @@ def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path :
     return results
 
 
-def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], skip : int = 12, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
+def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
     """
     Return automatic workflow for UMHEMe model trained each on a single time series.
     """
@@ -261,7 +261,7 @@ def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : 
     return whole_results
 
 
-def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], skip : int = 12, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
+def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
     """
     Return automatic workflow for a single UMHEMe model trained on all time series.
     """
