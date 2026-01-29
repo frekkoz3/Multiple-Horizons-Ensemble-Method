@@ -57,7 +57,7 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     return day
 
 
-def json_handler(file_path : str, weights_decay : str | None = None, loss_type : str | None = None, horizon : int | None = None, window : int | None = None, id_target : str | int | None = None, dataset : str | None = None) -> None:
+def json_handler(file_path : str, weights_decay : str | None = None, loss_type : str | None = None, horizon : int | None = None, window : int | None = None, id_target : str | int | None = None, skip : int | None = None ,dataset : str | None = None) -> None:
     """
     Load a json file and modifies its content as a dictionary.
 
@@ -89,6 +89,9 @@ def json_handler(file_path : str, weights_decay : str | None = None, loss_type :
         config['horizon'] = horizon
     if window is not None:
         config['window'] = window
+
+    if skip is not None:
+        config['skip'] = skip
 
     # save the modified config back to the json file
     with open(file_path, 'w') as f:

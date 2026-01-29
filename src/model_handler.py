@@ -219,7 +219,7 @@ def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path :
     return results
 
 
-def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], skip : int = 12, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
+def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], skip : int = 12, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
     """
     Return automatic workflow for UMHEMe model trained each on a single time series.
     """
@@ -261,7 +261,7 @@ def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : 
     return whole_results
 
 
-def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], skip : int = 12, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
+def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], skip : int = 12, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
     """
     Return automatic workflow for a single UMHEMe model trained on all time series.
     """
@@ -314,6 +314,8 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
         
         # define model
         model_config_path = model_config_paths[2] if isinstance(model_config_paths, list) else model_config_paths
+        json_handler(file_path = model_config_path, skip = skip)
+
         models = models_definer(dataset_init = [dataset_init], loss_type = ['horizon_weighted_huber'], model_type = ['ARIMA'], weight_type = ['uni'], data_config_path = data_config_path, model_config_paths = [model_config_path])
     
         # train model
@@ -327,7 +329,7 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
     return whole_results
 
 
-def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn_each : bool = False, tcn_all : bool = False, xgb_each : bool = False, xgb_all : bool = False, umheme_each : bool = False, umheme_all : bool = False, arima : bool = False, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
+def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn_each : bool = False, tcn_all : bool = False, xgb_each : bool = False, xgb_all : bool = False, umheme_each : bool = False, umheme_all : bool = False, arima : bool = False, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip_umheme : int = 1):
     """
     Automatic workflow to instantiate the dataset train/val/test sets, define, train and evaluate models.
 
@@ -373,10 +375,10 @@ def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, m
         xgb_all_results = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
         whole_results['xgb_all'] = xgb_all_results
     if umheme_each:
-        umheme_each_results = auto_wf_umheme_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        umheme_each_results = auto_wf_umheme_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme)
         whole_results['umheme_each'] = umheme_each_results
     if umheme_all:
-        umheme_all_results = auto_wf_umheme_all(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        umheme_all_results = auto_wf_umheme_all(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme)
         whole_results['umheme_all'] = umheme_all_results
     if arima:
         arima_results = auto_wf_arima_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, random_state = random_state)

@@ -363,7 +363,7 @@ class ARIMAModel(DirectModel):
 
         mse_error = np.mean([np.mean(err**2) for err in errors])
 
-        return mse_error
+        return y_hat
         
 
     def save_model(self, path: str):
