@@ -27,7 +27,7 @@ pandas==2.3.3
 parso==0.8.5
 platformdirs==4.5.1
 plotly==6.5.2
-pmdarima==2.2.1
+pmdarima==2.1.1
 prompt_toolkit==3.0.52
 psutil==7.2.1
 pure_eval==0.2.3
