@@ -531,25 +531,89 @@ def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, m
     whole_errors = {}
     # do different subroutines for each particular case
     if tcn_each:
-        tcn_each_errors = auto_wf_baseline_each(dataset_init, data_path, data_config_path, model_config_paths, tcn = True, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        tcn_each_errors = auto_wf_baseline_each(dataset_init,
+                                                data_path,
+                                                data_config_path,
+                                                model_config_paths,
+                                                tcn = True,
+                                                prop = prop,
+                                                shuffle_data = shuffle_data,
+                                                shuffle_internal = shuffle_internal,
+                                                random_state = random_state
+                                                )
         whole_errors['tcn_each'] = tcn_each_errors
     if tcn_all:
-        tcn_all_errors = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = True, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        tcn_all_errors = auto_wf_baseline_all(dataset_init,
+                                              data_path,
+                                              data_config_path,
+                                              model_config_paths,
+                                              tcn = True,
+                                              prop = prop,
+                                              shuffle_data = shuffle_data,
+                                              shuffle_internal = shuffle_internal,
+                                              random_state = random_state
+                                              )
         whole_errors['tcn_all'] = tcn_all_errors
     if xgb_each:
-        xgb_each_errors = auto_wf_baseline_each(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        xgb_each_errors = auto_wf_baseline_each(dataset_init,
+                                                data_path,
+                                                data_config_path,
+                                                model_config_paths,
+                                                tcn = False,
+                                                prop = prop,
+                                                shuffle_data = shuffle_data,
+                                                shuffle_internal = shuffle_internal,
+                                                random_state = random_state
+                                                )
         whole_errors['xgb_each'] = xgb_each_errors
     if xgb_all:
-        xgb_all_errors = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        xgb_all_errors = auto_wf_baseline_all(dataset_init,
+                                              data_path,
+                                              data_config_path,
+                                              model_config_paths,
+                                              tcn = False, 
+                                              prop = prop,
+                                              shuffle_data = shuffle_data,
+                                              shuffle_internal = shuffle_internal,
+                                              random_state = random_state
+                                              )
         whole_errors['xgb_all'] = xgb_all_errors
     if umheme_each:
-        umheme_each_errors = auto_wf_umheme_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme, weight_type = weight_type, loss_type = loss_type)
+        umheme_each_errors = auto_wf_umheme_each(dataset_init,
+                                                 data_path,
+                                                 data_config_path,
+                                                 model_config_paths,
+                                                 prop = prop,
+                                                 shuffle_data = shuffle_data,
+                                                 shuffle_internal = shuffle_internal,
+                                                 random_state = random_state,
+                                                 skip = skip_umheme,
+                                                 weight_type = weight_type,
+                                                 loss_type = loss_type
+                                                 )
         whole_errors['umheme_each'] = umheme_each_errors
     if umheme_all:
-        umheme_all_errors = auto_wf_umheme_all(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme, weight_type = weight_type, loss_type = loss_type)
+        umheme_all_errors = auto_wf_umheme_all(dataset_init,
+                                               data_path,
+                                               data_config_path,
+                                               model_config_paths,
+                                               prop = prop,
+                                               shuffle_data = shuffle_data,
+                                               shuffle_internal = shuffle_internal,
+                                               random_state = random_state,
+                                               skip = skip_umheme,
+                                               weight_type = weight_type,
+                                               loss_type = loss_type
+                                               )
         whole_errors['umheme_all'] = umheme_all_errors
     if arima:
-        arima_errors = auto_wf_arima_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, random_state = random_state)
+        arima_errors = auto_wf_arima_each(dataset_init,
+                                          data_path,
+                                          data_config_path,
+                                          model_config_paths,
+                                          prop = prop,
+                                          random_state = random_state
+                                          )
         whole_errors['arima'] = arima_errors
 
     # save whole_errors as json
