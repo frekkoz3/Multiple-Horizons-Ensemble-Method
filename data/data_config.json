@@ -38,7 +38,7 @@
         "date_col": "hours_from_start",
         "window": 168,
         "horizon": 24,
-        "skip" : 7,
+        "skip" : 13,
         "aggregator": false,
         "differentiator": true,
         "differentiator_orders": [
