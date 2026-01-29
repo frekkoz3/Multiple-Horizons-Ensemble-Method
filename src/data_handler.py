@@ -466,9 +466,14 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
         config = json.load(f)
     
     if not is_arima:
-        X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
+        X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'], k=config[dataset]['skip'])
         # Split data
-        train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle_data=shuffle_data, shuffle_internal=shuffle_internal, random_state=random_state)  
+        train, val, test = train_validation_test_split(X_slide, 
+                                                       y_slide, 
+                                                       proportions=prop, 
+                                                       shuffle_data=shuffle_data, 
+                                                       shuffle_internal=shuffle_internal, 
+                                                       random_state=random_state)  
 
         # return train, val, test
         return train, val, test, X, data
