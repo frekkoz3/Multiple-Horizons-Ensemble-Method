@@ -1,3 +1,4 @@
 *.csv filter=lfs diff=lfs merge=lfs -text
 *.ipynb	diff=jupyternotebook
 *.ipynb	merge=jupyternotebook
+*.pkl filter=lfs diff=lfs merge=lfs -text
