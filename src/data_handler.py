@@ -381,11 +381,12 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
     dataset_path = data_path + '/' + config[dataset]['filename']
     id_col = config[dataset]['id_col']
     date_col = config[dataset]['date_col']
+    date_format = config[dataset]['date_format']
     target_col = config[dataset]['target_col']
     id_target = config[dataset]['id_target']
 
     try:
-        data = pd.read_csv(dataset_path, parse_dates=[date_col])    
+        data = pd.read_csv(dataset_path, parse_dates=[date_col], date_format=date_format)    
     except FileNotFoundError as e:
         print(f"Error: {e}")
         raise

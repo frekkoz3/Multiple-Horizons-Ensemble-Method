@@ -281,7 +281,10 @@ class XGBoost(DirectModel):
         Returns:
         - None
         """
-        self.reg.save_model(file_path)
+        if not file_path.endswith(".json"):
+            self.reg.save_model(f"{file_path}.json")
+        else:
+            self.reg.save_model(file_path)
         return
 
 

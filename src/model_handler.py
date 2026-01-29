@@ -4,7 +4,6 @@ import json
 import os
 from datetime import datetime
 
-
 from src.direct_models import *
 from src.mheme import *
 from src.config_files import *
@@ -121,9 +120,9 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
         if save_models:
             os.makedirs(models_path_save, exist_ok=True)
             if np.strings.endswith(model_name, '.pkl'):
-                model_instance.save_model(f"{models_path_save}_{model_name}")
+                model_instance.save_model(f"{models_path_save}\{model_name}")
             else:
-                model_instance.save_model(f"{models_path_save}{model_name}_{dataset_init}.pkl")
+                model_instance.save_model(f"{models_path_save}\{model_name}_{dataset_init}")
 
     return 
 
