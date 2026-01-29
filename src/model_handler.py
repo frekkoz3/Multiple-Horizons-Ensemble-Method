@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import json
 import os
+from datetime import datetime
+
 
 from src.direct_models import *
 from src.mheme import *
@@ -143,6 +145,47 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
         return single_prediction
     
     return results
+
+
+def models_saver(errors: dict):
+    # ---------------------------------------------------------
+    # SAVING SUBROUTINE
+    # ---------------------------------------------------------
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # 1. FLATTEN DATA FOR CSV (Analysis Ready)
+    # This converts the nested dictionary into a list of records
+    records = []
+    for method_name, errors_dict in whole_errors.items():
+        # errors_dict is e.g. {'ts_01': 0.05} or {'whole_dataset': 0.05}
+        for uid, error_val in errors_dict.items():
+            records.append({
+                'Method': method_name,
+                'ID': uid,
+                'Error': float(error_val) # Ensure numpy floats are converted
+            })
+    
+    if records:
+        df_results = pd.DataFrame(records)
+        csv_filename = f"../models/results/errors_{dataset_init}_{timestamp}.csv"
+        os.makedirs(os.path.dirname(csv_filename), exist_ok=True)
+        df_results.to_csv(csv_filename, index=False)
+        print(f"Results (CSV) saved to: {csv_filename}")
+    
+    # 2. SAVE RAW JSON (Backup)
+    # Necessary for full reproducibility or if data becomes non-tabular later
+    class NumpyEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, (np.integer, np.floating)):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return super().default(obj)
+
+    json_filename = f"../models/results/errors_{dataset_init}_{timestamp}.json"
+    with open(json_filename, 'w') as f:
+        json.dump(whole_errors, f, indent=4, cls=NumpyEncoder)
+    print(f"Results (JSON) saved to: {json_filename}")
 
 
 def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn : bool = True, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
@@ -400,6 +443,9 @@ def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, m
         arima_errors = auto_wf_arima_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, random_state = random_state)
         whole_errors['arima'] = arima_errors
 
+    # save whole_errors as json
+    model_saver(whole_errors)
+    
     return whole_errors
     
 if __name__ == "__main__":
