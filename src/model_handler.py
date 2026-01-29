@@ -128,14 +128,20 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     """
     results = {}
     print("\n\nTest set evaluation:")
+    
+    # Loop through all models regardless of count
     for model_name, model_instance in models.items():
         print(f"\nEvaluate model: {model_name}")
         
         if "UMHEMe" in model_name:
-            results[model_name] = (model_instance.predict(test[0]), model_instance.whole_predict(test[0]))
+            results[model_name] = model_instance.predict(test[0])
         else:
             results[model_name] = model_instance.predict(test[0])
-
+    
+    if len(results) == 1:
+        single_prediction = next(iter(results.values()))
+        return single_prediction
+    
     return results
 
 
@@ -155,7 +161,8 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
     # save in a list all the unique time series ids
     unique_id = dataset[config[datasets[dataset_init]]['id_col']].unique().tolist()
 
-    whole_results = {}
+    whole_predictions = {}
+    whole_errors = {}
 
     # for each unique time series id, create a dataset and train a TCN model
     for uid in unique_id:
@@ -181,11 +188,13 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
             models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/{uid}.pkl')
         
         # evaluate model
-        results = models_evaluator(models, test, dataset_init)
+        prediction = models_evaluator(models, test, dataset_init)
+        error = mse(prediction, test[1])
 
-        whole_results[uid] = results
+        whole_predictions[uid] = prediction
+        whole_errors[uid] = error
 
-    return whole_results
+    return whole_errors
     
 
 def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn : bool = True, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
@@ -214,12 +223,14 @@ def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path :
         models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/all.pkl')
 
     # evaluate model
-    results = models_evaluator(models, test, dataset_init)
+    prediction = models_evaluator(models, test, dataset_init)
+    error = mse(prediction, test[1])
+    error_dict = {'whole_dataset' : error}
 
-    return results
+    return error_dict
 
 
-def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
+def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1, weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'], loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']):
     """
     Return automatic workflow for UMHEMe model trained each on a single time series.
     """
@@ -235,7 +246,8 @@ def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : 
     # save in a list all the unique time series ids
     unique_id = dataset[config[datasets[dataset_init]]['id_col']].unique().tolist()
 
-    whole_results = {}
+    whole_predictions = {}
+    whole_errors = {}
 
     # for each unique time series id, create a dataset and train a UMHEMe model
     for uid in unique_id:
@@ -248,20 +260,22 @@ def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : 
 
         # define model
         model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
-        models = models_definer(dataset_init = [dataset_init], loss_type = ['horizon_weighted_huber', 'mse'], model_type = ['UMHEMe'], weight_type = ['soft_lin', 'strong_lin', 'exp'], data_config_path = data_config_path, model_config_paths = [model_config_path], base_model = 'TCN', skip = skip)
+        models = models_definer(dataset_init = [dataset_init], loss_type = loss_type, model_type = ['UMHEMe'], weight_type = weight_type, data_config_path = data_config_path, model_config_paths = [model_config_path], base_model = 'TCN', skip = skip)
         
         # train model
         models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/umheme/uid_{uid}_skip_{skip}.pkl')
         
         # evaluate model
-        results = models_evaluator(models, test, dataset_init)
+        prediction = models_evaluator(models, test, dataset_init)
+        error = mse(prediction, test[1])
+        
+        whole_predictions[uid] = prediction
+        whole_errors[uid] = error
+        
+    return whole_errors
 
-        whole_results[uid] = results
 
-    return whole_results
-
-
-def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1):
+def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1, weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'], loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']):
     """
     Return automatic workflow for a single UMHEMe model trained on all time series.
     """
@@ -274,15 +288,17 @@ def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : s
 
     # define model
     model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
-    models = models_definer(dataset_init = [dataset_init], loss_type = ['horizon_weighted_huber', 'mse'], model_type = ['UMHEMe'], weight_type = ['soft_lin', 'strong_lin', 'exp'], data_config_path = data_config_path, model_config_paths = [model_config_path], base_model = 'TCN', skip = skip)
+    models = models_definer(dataset_init = [dataset_init], loss_type = loss_type, model_type = ['UMHEMe'], weight_type = weight_type, data_config_path = data_config_path, model_config_paths = [model_config_path], base_model = 'TCN', skip = skip)
     
     # train model
     models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/umheme/all.pkl')
 
     # evaluate model
-    results = models_evaluator(models, test, dataset_init)
+    prediction = models_evaluator(models, test, dataset_init)
+    error = mse(prediction, test[1])
+    error_dict = {'whole_dataset': error}
 
-    return results
+    return error_dict
 
 
 def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), random_state : int = 42):
@@ -301,7 +317,7 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
     # save in a list all the unique time series ids
     unique_id = dataset[config[datasets[dataset_init]]['id_col']].unique().tolist()
 
-    whole_results = {}
+    whole_errors = {}
 
     # for each unique time series id, create a dataset and train a UMHEMe model
     for uid in unique_id:
@@ -322,14 +338,14 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
         models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/arima/all.pkl')
     
         # evaluate model
-        results = models_evaluator(models, test, dataset_init)
+        error = models_evaluator(models, test, dataset_init)
 
-        whole_results[uid] = results
+        whole_errors[uid] = error
 
-    return whole_results
+    return whole_errors
 
 
-def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn_each : bool = False, tcn_all : bool = False, xgb_each : bool = False, xgb_all : bool = False, umheme_each : bool = False, umheme_all : bool = False, arima : bool = False, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip_umheme : int = 1):
+def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn_each : bool = False, tcn_all : bool = False, xgb_each : bool = False, xgb_all : bool = False, umheme_each : bool = False, umheme_all : bool = False, arima : bool = False, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip_umheme : int = 1, weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'], loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']):
     """
     Automatic workflow to instantiate the dataset train/val/test sets, define, train and evaluate models.
 
@@ -360,30 +376,31 @@ def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, m
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
 
     
-    whole_results = {}
+    whole_errors = {}
     # do different subroutines for each particular case
     if tcn_each:
-        tcn_each_results = auto_wf_baseline_each(dataset_init, data_path, data_config_path, model_config_paths, tcn = True, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
-        whole_results['tcn_each'] = tcn_each_results
+        tcn_each_errors = auto_wf_baseline_each(dataset_init, data_path, data_config_path, model_config_paths, tcn = True, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        whole_errors['tcn_each'] = tcn_each_errors
     if tcn_all:
-        tcn_all_results = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = True, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
-        whole_results['tcn_all'] = tcn_all_results
+        tcn_all_errors = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = True, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        whole_errors['tcn_all'] = tcn_all_errors
     if xgb_each:
-        xgb_each_results = auto_wf_baseline_each(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
-        whole_results['xgb_each'] = xgb_each_results
+        xgb_each_errors = auto_wf_baseline_each(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        whole_errors['xgb_each'] = xgb_each_errors
     if xgb_all:
-        xgb_all_results = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
-        whole_results['xgb_all'] = xgb_all_results
+        xgb_all_errors = auto_wf_baseline_all(dataset_init, data_path, data_config_path, model_config_paths, tcn = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        whole_errors['xgb_all'] = xgb_all_errors
     if umheme_each:
-        umheme_each_results = auto_wf_umheme_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme)
-        whole_results['umheme_each'] = umheme_each_results
+        umheme_each_errors = auto_wf_umheme_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme, weight_type = weight_type, loss_type = loss_type)
+        whole_errors['umheme_each'] = umheme_each_errors
     if umheme_all:
-        umheme_all_results = auto_wf_umheme_all(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme)
-        whole_results['umheme_all'] = umheme_all_results
+        umheme_all_errors = auto_wf_umheme_all(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state, skip = skip_umheme, weight_type = weight_type, loss_type = loss_type)
+        whole_errors['umheme_all'] = umheme_all_errors
     if arima:
-        arima_results = auto_wf_arima_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, random_state = random_state)
-        whole_results['arima'] = arima_results
+        arima_errors = auto_wf_arima_each(dataset_init, data_path, data_config_path, model_config_paths, prop = prop, random_state = random_state)
+        whole_errors['arima'] = arima_errors
 
-    return whole_results
+    return whole_errors
+    
 if __name__ == "__main__":
     pass

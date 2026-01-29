@@ -17,6 +17,6 @@
     "n_epochs": 20,
     "batch_size": 16,
     "weights_decay": "exp",
-    "loss": "mse",
+    "loss": "horizon_weighted_huber",
     "device": "cpu"
 }

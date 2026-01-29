@@ -49,7 +49,7 @@ def horizon_weighted_huber(y_hat : np.ndarray | torch.Tensor, y : np.ndarray | t
 
     return loss.mean()
 
-def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights: np.ndarray | torch.Tensor | None = None):
+def mse(y_hat: np.ndarray | torch.Tensor | dict, y: np.ndarray | torch.Tensor, weights: np.ndarray | torch.Tensor | None = None):
     """
     Compute Mean Squared Error (MSE).
 
@@ -67,6 +67,19 @@ def mse(y_hat: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor, weights:
     torch.Tensor
         Scalar MSE loss averaged over batch and horizon.
     """
+    # If y_hat is a dictionary (multiple horizon predictions), aggregate them and take the mean
+    if isinstance(y_hat, dict):
+        # Convert dict values to a list of tensors
+        preds_list = []
+        for val in y_hat.values():
+            if not torch.is_tensor(val):
+                preds_list.append(torch.tensor(val, dtype=torch.float32))
+            else:
+                preds_list.append(val)
+        
+        # Stack and average across the models/horizons
+        # Shape: (Num_Models, Batch, Horizon) -> Mean -> (Batch, Horizon)
+        y_hat = torch.stack(preds_list).mean(dim=0)
 
     if not torch.is_tensor(y_hat):
         y_hat = torch.tensor(y_hat, dtype=torch.float32)

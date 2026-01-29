@@ -352,7 +352,7 @@ class ARIMAModel(DirectModel):
                 forecast = self.model.forecast(steps=self.horizon)
             
             y_hat.append(forecast)
-            errors.append(test[t:t + self.skip] - forecast[:self.skip])
+            errors.append(test[t:t + self.horizon] - forecast[:self.horizon])
 
             # update ARIMA with REAL value ---
             true_values = list(test[t:t + self.skip])
@@ -363,7 +363,7 @@ class ARIMAModel(DirectModel):
 
         mse_error = np.mean([np.mean(err**2) for err in errors])
 
-        return y_hat
+        return mse_error
         
 
     def save_model(self, path: str):
@@ -382,6 +382,7 @@ class ARIMAModel(DirectModel):
             # that handles internal wrappers better than raw pickling
             self.model.save(path)
 
+    
     def load_model(self, path: str):
         """
         Loads a saved model from disk into self.model.
