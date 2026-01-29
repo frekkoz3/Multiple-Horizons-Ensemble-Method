@@ -50,7 +50,12 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
                     with open(data_config_path, 'r') as f:
                         data_config = json.load(f)
                         
-                    json_handler(file_path = model_config_paths[j], weights_decay = weights, loss_type = loss, horizon = data_config[models_names[ds]]['horizon'], window = data_config[models_names[ds]]['window'])
+                    json_handler(file_path = model_config_paths[j], 
+                                 weights_decay = weights, 
+                                 loss_type = loss, 
+                                 horizon = data_config[models_names[ds]]['horizon'],
+                                 window = data_config[models_names[ds]]['window']
+                                )
                     
                     # Define model
                     if model == 'TCN':
@@ -74,7 +79,11 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
                             dataset_window = config['window']
                             dataset_horizon = config['horizon']
 
-                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, window = dataset_window, model_class = base_model_class, config_path = model_config_paths[j], skip = kwargs.get('skip', 1))
+                            models[f'UMHEMe_{loss}_{weights}'] = UMHEMe(horizon = dataset_horizon, 
+                                                                        window = dataset_window, 
+                                                                        model_class = base_model_class, 
+                                                                        config_path = model_config_paths[j], 
+                                                                        skip = kwargs.get('skip', 1))
                         
         models_for_each_dataset.append(models)      
     
@@ -214,21 +223,41 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
         
         # load data
-        train, val, test, X, data = dataset_handler(dataset_init =dataset_init, data_path = data_path, data_config_path = data_config_path, is_arima = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
+                                                    data_path = data_path,
+                                                    data_config_path = data_config_path,
+                                                    is_arima = False,
+                                                    prop = prop,
+                                                    shuffle_data = shuffle_data,
+                                                    shuffle_internal = shuffle_internal,
+                                                    random_state = random_state
+                                                    )
         
         # define model
         if tcn:
             model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
-            models = models_definer(dataset_init = [dataset_init], loss_type = ['horizon_weighted_huber'], model_type = ['TCN'], weight_type = ['uni'], data_config_path = data_config_path, model_config_paths = [model_config_path])
+            models = models_definer(dataset_init = [dataset_init],
+                                    loss_type = ['horizon_weighted_huber'],
+                                    model_type = ['TCN'],
+                                    weight_type = ['uni'],
+                                    data_config_path = data_config_path,
+                                    model_config_paths = [model_config_path]
+                                    )
         else:
             model_config_path = model_config_paths[1] if isinstance(model_config_paths, list) else model_config_paths
-            models = models_definer(dataset_init = [dataset_init], loss_type = ['mse'], model_type = ['XGBoost'], weight_type = ['uni'], data_config_path = data_config_path, model_config_paths = [model_config_path])
+            models = models_definer(dataset_init = [dataset_init],
+                                    loss_type = ['mse'],
+                                    model_type = ['XGBoost'],
+                                    weight_type = ['uni'],
+                                    data_config_path = data_config_path,
+                                    model_config_paths = [model_config_path]
+                                    )
         
         # train model
         if tcn:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/tcn/{uid}.pkl')
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/tcn/{uid}')
         else:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/{uid}.pkl')
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/{uid}')
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -249,21 +278,41 @@ def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path :
 
     # load data
     json_handler(file_path = data_config_path, id_target = "ALL", dataset = datasets[dataset_init])
-    train, val, test, X, data = dataset_handler(dataset_init =dataset_init, data_path = data_path, data_config_path = data_config_path, is_arima = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+    train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
+                                                data_path = data_path,
+                                                data_config_path = data_config_path,
+                                                is_arima = False,
+                                                prop = prop,
+                                                shuffle_data = shuffle_data,
+                                                shuffle_internal = shuffle_internal,
+                                                random_state = random_state
+                                                )
 
     # define model
     if tcn:
         model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
-        models = models_definer(dataset_init = [dataset_init], loss_type = ['horizon_weighted_huber'], model_type = ['TCN'], weight_type = ['uni'], data_config_path = data_config_path, model_config_paths = [model_config_path])
+        models = models_definer(dataset_init = [dataset_init],
+                                loss_type = ['horizon_weighted_huber'],
+                                model_type = ['TCN'],
+                                weight_type = ['uni'],
+                                data_config_path = data_config_path,
+                                model_config_paths = [model_config_path]
+                                )
     else:
         model_config_path = model_config_paths[1] if isinstance(model_config_paths, list) else model_config_paths
-        models = models_definer(dataset_init = [dataset_init], loss_type = ['mse'], model_type = ['XGBoost'], weight_type = ['uni'], data_config_path = data_config_path, model_config_paths = [model_config_path])
+        models = models_definer(dataset_init = [dataset_init],
+                                loss_type = ['mse'],
+                                model_type = ['XGBoost'],
+                                weight_type = ['uni'],
+                                data_config_path = data_config_path,
+                                model_config_paths = [model_config_path]
+                                )
 
     # train model
     if tcn:
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/tcn/all.pkl')
+        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/tcn/all')
     else:
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/all.pkl')
+        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/all')
 
     # evaluate model
     prediction = models_evaluator(models, test, dataset_init)
@@ -299,14 +348,35 @@ def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : 
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
         
         # load data
-        train, val, test, X, data = dataset_handler(dataset_init =dataset_init, data_path = data_path, data_config_path = data_config_path, is_arima = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+        train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
+                                                    data_path = data_path,
+                                                    data_config_path = data_config_path,
+                                                    is_arima = False,
+                                                    prop = prop,
+                                                    shuffle_data = shuffle_data,
+                                                    shuffle_internal = shuffle_internal,
+                                                    random_state = random_state
+                                                    )
 
         # define model
         model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
-        models = models_definer(dataset_init = [dataset_init], loss_type = loss_type, model_type = ['UMHEMe'], weight_type = weight_type, data_config_path = data_config_path, model_config_paths = [model_config_path], base_model = 'TCN', skip = skip)
+        models = models_definer(dataset_init = [dataset_init],
+                                loss_type = loss_type,
+                                model_type = ['UMHEMe'],
+                                weight_type = weight_type,
+                                data_config_path = data_config_path,
+                                model_config_paths = [model_config_path],
+                                base_model = 'TCN',
+                                skip = skip
+                                )
         
         # train model
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/umheme/uid_{uid}_skip_{skip}.pkl')
+        models_trainer(models,
+                       train,
+                       dataset_init,
+                       save_models = True,
+                       models_path_save = f'../models/{datasets[dataset_init]}/umheme/uid_{uid}_skip_{skip}'
+                       )
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -327,14 +397,34 @@ def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : s
 
     # load data
     json_handler(file_path = data_config_path, id_target = "ALL", dataset = datasets[dataset_init])
-    train, val, test, X, data = dataset_handler(dataset_init =dataset_init, data_path = data_path, data_config_path = data_config_path, is_arima = False, prop = prop, shuffle_data = shuffle_data, shuffle_internal = shuffle_internal, random_state = random_state)
+    train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
+                                                data_path = data_path,
+                                                data_config_path = data_config_path,
+                                                is_arima = False,
+                                                prop = prop,
+                                                shuffle_data = shuffle_data,
+                                                shuffle_internal = shuffle_internal,
+                                                random_state = random_state
+                                                )
 
     # define model
     model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
-    models = models_definer(dataset_init = [dataset_init], loss_type = loss_type, model_type = ['UMHEMe'], weight_type = weight_type, data_config_path = data_config_path, model_config_paths = [model_config_path], base_model = 'TCN', skip = skip)
+    models = models_definer(dataset_init = [dataset_init],
+                            loss_type = loss_type,
+                            model_type = ['UMHEMe'],
+                            weight_type = weight_type,
+                            data_config_path = data_config_path, 
+                            model_config_paths = [model_config_path],
+                            base_model = 'TCN',
+                            skip = skip)
     
     # train model
-    models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/umheme/all.pkl')
+    models_trainer(models,
+                   train,
+                   dataset_init,
+                   save_models = True,
+                   models_path_save = f'../models/{datasets[dataset_init]}/umheme/all'
+                   )
 
     # evaluate model
     prediction = models_evaluator(models, test, dataset_init)
@@ -369,16 +459,35 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
     
         # load data
-        train, val, test, X, data = dataset_handler(dataset_init =dataset_init, data_path = data_path, data_config_path = data_config_path, is_arima = True, prop = prop, shuffle_data = False, shuffle_internal = True, random_state = random_state)
+        train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
+                                                    data_path = data_path,
+                                                    data_config_path = data_config_path,
+                                                    is_arima = True,
+                                                    prop = prop,
+                                                    shuffle_data = False,
+                                                    shuffle_internal = False,
+                                                    random_state = random_state)
         
         # define model
         model_config_path = model_config_paths[2] if isinstance(model_config_paths, list) else model_config_paths
+
+        with open(data_config_path, 'r') as f:
+            config = json.load(f)
+
+        skip = config['skip']
+
         json_handler(file_path = model_config_path, skip = skip)
 
-        models = models_definer(dataset_init = [dataset_init], loss_type = ['horizon_weighted_huber'], model_type = ['ARIMA'], weight_type = ['uni'], data_config_path = data_config_path, model_config_paths = [model_config_path])
+        models = models_definer(dataset_init = [dataset_init],
+                                loss_type = ['horizon_weighted_huber'],
+                                model_type = ['ARIMA'],
+                                weight_type = ['uni'],
+                                data_config_path = data_config_path,
+                                model_config_paths = [model_config_path]
+                                )
     
         # train model
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/arima/all.pkl')
+        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/arima/all')
     
         # evaluate model
         error = models_evaluator(models, test, dataset_init)

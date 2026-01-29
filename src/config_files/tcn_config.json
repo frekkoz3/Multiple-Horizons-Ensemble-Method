@@ -1,24 +1,3 @@
-{
-    "window": 168,
-    "horizon": 24,
-    "n_layers": 3,
-    "inner_layers_dim": [
-        32,
-        16,
-        8
-    ],
-    "kernel_size": [
-        3,
-        3,
-        3
-    ],
-    "stride": 1,
-    "padding": 1,
-    "activation": "relu",
-    "learning_rate": 0.001,
-    "n_epochs": 100,
-    "batch_size": 32,
-    "weights_decay": "exp",
-    "loss": "horizon_weighted_huber",
-    "device": "cpu"
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:b7dea12584c911ec7ef8be8f1cd7c9e125aa56fdc9d7c8d79f1e9f166e6b14f8
+size 428

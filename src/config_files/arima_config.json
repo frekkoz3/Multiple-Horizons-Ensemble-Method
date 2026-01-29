@@ -1,15 +1,3 @@
-{
-    "window": 168,
-    "horizon": 24,
-    "auto_arima": false,
-    "seasonality": 24,
-    "p": 1,
-    "d": 1,
-    "q": 1,
-    "P": 1,
-    "D": 1,
-    "Q": 1,
-    "weights_decay": "uni",
-    "loss": "horizon_weighted_huber",
-    "skip": 1
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:6f2e919b8fd03526157be4d63d052db3d21592483ac2bf22c9f14450f2653485
+size 255
