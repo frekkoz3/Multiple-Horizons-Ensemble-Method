@@ -21,7 +21,7 @@
 ## EVALUATION LISTS
 
 - [ ] electricity
-- [x] traffic
+- [ ] traffic
 - [ ] energy
 - [ ] volatility
-- [x] wind
+- [x] wind (missing arima)
