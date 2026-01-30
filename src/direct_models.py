@@ -228,7 +228,10 @@ class TCN(nn.Module, DirectModel):
         Returns:
         - None
         """
-        torch.save(self.state_dict(), file_path)
+        if file_path.endswith(".pkl"):
+            torch.save(self.state_dict(), file_path)
+        else:
+            torch.save(self.state_dict(), f"{file_path}.pkl")
         return
 
 
@@ -281,7 +284,10 @@ class XGBoost(DirectModel):
         Returns:
         - None
         """
-        self.reg.save_model(file_path)
+        if not file_path.endswith(".json"):
+            self.reg.save_model(f"{file_path}.json")
+        else:
+            self.reg.save_model(file_path)
         return
 
 
@@ -312,7 +318,6 @@ class ARIMAModel(DirectModel):
                 self.Q = config['Q']
 
         self.skip = config['skip']
-
 
     def fit(self, y: np.ndarray):
         if self.auto_arima:

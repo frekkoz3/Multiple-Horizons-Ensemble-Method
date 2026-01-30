@@ -46,8 +46,6 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     else:
         real_index = index + n_train + n_val
 
-    print(real_index)
-
     if 'traffic.csv' in data_path:    # if dataset 'traffic.csv', the target column is 'hours_from_start'
         hours_from_start = dataset.iloc[real_index]['hours_from_start']
         day = f"Day {hours_from_start // 24}, Hour {hours_from_start % 24}"
@@ -381,11 +379,12 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
     dataset_path = data_path + '/' + config[dataset]['filename']
     id_col = config[dataset]['id_col']
     date_col = config[dataset]['date_col']
+    date_format = config[dataset]['date_format']
     target_col = config[dataset]['target_col']
     id_target = config[dataset]['id_target']
 
     try:
-        data = pd.read_csv(dataset_path, parse_dates=[date_col])    
+        data = pd.read_csv(dataset_path, parse_dates=[date_col], date_format=date_format)    
     except FileNotFoundError as e:
         print(f"Error: {e}")
         raise
@@ -466,9 +465,14 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
         config = json.load(f)
     
     if not is_arima:
-        X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'])
+        X_slide, y_slide = sliding_window(X, window=config[dataset]['window'], horizon=config[dataset]['horizon'], k=config[dataset]['skip'])
         # Split data
-        train, val, test = train_validation_test_split(X_slide, y_slide, proportions=prop, shuffle_data=shuffle_data, shuffle_internal=shuffle_internal, random_state=random_state)  
+        train, val, test = train_validation_test_split(X_slide, 
+                                                       y_slide, 
+                                                       proportions=prop, 
+                                                       shuffle_data=shuffle_data, 
+                                                       shuffle_internal=shuffle_internal, 
+                                                       random_state=random_state)  
 
         # return train, val, test
         return train, val, test, X, data
