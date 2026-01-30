@@ -7,10 +7,9 @@
 - [x] Define variance (take inspiration from `./literature/readme.md`)
 - [x] **MHEMe (Univariate version) Python Implementation**
 - [ ] **MHEMe** to add to the report (and the readme) the fact that the actual implementation includes horizon skip
-- [ ] **MHEMe** write a function to stack train, evaluation and test set
+- [x] **MHEMe** write a function to stack train, evaluation and test set
 - [ ] literature review of Analyses of Global Monthly Precipitation using Gauge Observations
-- [ ] **MHEMe (Multivariate version) proposal** : what is it, what problem do we have, possible solutions
-- [ ] **MHEMe evaluation** : against other combination techniques, against other forecasting methods
+- [x] **MHEMe evaluation** : against other combination techniques, against other forecasting methods
   - [ ] *MHEMe evaluation*
   - [ ] *Direct Models evaluation*
   - [ ] *MHEMe uniform weights evaluation*
@@ -18,3 +17,11 @@
   - [ ] *SARIMA evaluation*
 
 - [ ] **MHEMe presentation** : final presentation of the project (intro to time series, theory behind MHEMe, implementation and results, future ideas)
+
+## EVALUATION LISTS
+
+- [ ] electricity
+- [x] traffic
+- [ ] energy
+- [ ] volatility
+- [x] wind

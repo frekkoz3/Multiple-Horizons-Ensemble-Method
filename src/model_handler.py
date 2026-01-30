@@ -12,7 +12,13 @@ from src.data_handler import *
 from statsmodels.tsa.statespace.tools import diff
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 
-def models_definer(dataset_init : list[str], loss_type : list[str], model_type : list[str], weight_type : list[str], data_config_path : str, model_config_paths : list[str],  **kwargs) -> dict:
+def models_definer(dataset_init : list[str],
+                   loss_type : list[str],
+                   model_type : list[str],
+                   weight_type : list[str],
+                   data_config_path : str,
+                   model_config_paths : list[str], 
+                   **kwargs) -> dict:
     """
     Defines data models for a given dataset.
 
@@ -48,13 +54,21 @@ def models_definer(dataset_init : list[str], loss_type : list[str], model_type :
                     # Modify json config file accordingly to the respective information provided
                     with open(data_config_path, 'r') as f:
                         data_config = json.load(f)
-                        
-                    json_handler(file_path = model_config_paths[j], 
-                                 weights_decay = weights, 
-                                 loss_type = loss, 
-                                 horizon = data_config[models_names[ds]]['horizon'],
-                                 window = data_config[models_names[ds]]['window']
-                                )
+                    if model == "ARIMA":  
+                        json_handler(file_path = model_config_paths[j], 
+                                    weights_decay = weights, 
+                                    loss_type = loss, 
+                                    horizon = data_config[models_names[ds]]['horizon'],
+                                    window = data_config[models_names[ds]]['window'],
+                                    skip = data_config[models_names[ds]]['skip']
+                                    )
+                    else:
+                        json_handler(file_path = model_config_paths[j], 
+                                    weights_decay = weights, 
+                                    loss_type = loss, 
+                                    horizon = data_config[models_names[ds]]['horizon'],
+                                    window = data_config[models_names[ds]]['window']
+                                    )
                     
                     # Define model
                     if model == 'TCN':
@@ -122,7 +136,7 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
             if np.strings.endswith(model_name, '.pkl'):
                 model_instance.save_model(f"{models_path_save}\{model_name}")
             else:
-                model_instance.save_model(f"{models_path_save}\{model_name}_{dataset_init}")
+                model_instance.save_model(f"{models_path_save}\{model_name}_{dataset_init}.pkl")
 
     return 
 
@@ -268,7 +282,16 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
     return whole_errors
     
 
-def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn : bool = True, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
+def auto_wf_baseline_all(dataset_init : str,
+                         data_path : str,
+                         data_config_path : str,
+                         model_config_paths : str | list[str],
+                         tcn : bool = True,
+                         prop : float = (0.7, 0.1, 0.2),
+                         shuffle_data : bool = False,
+                         shuffle_internal : bool = True,
+                         random_state : int = 42
+                         ):
     """
     Return automatic workflow for a single TCN baseline model trained on all time series.
     """
@@ -321,7 +344,18 @@ def auto_wf_baseline_all(dataset_init : str, data_path : str, data_config_path :
     return error_dict
 
 
-def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1, weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'], loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']):
+def auto_wf_umheme_each(dataset_init : str,
+                        data_path : str,
+                        data_config_path : str,
+                        model_config_paths : str | list[str],
+                        prop : float = (0.7, 0.1, 0.2),
+                        shuffle_data : bool = False,
+                        shuffle_internal : bool = True,
+                        random_state : int = 42,
+                        skip : int = 1,
+                        weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
+                        loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']
+                        ):
     """
     Return automatic workflow for UMHEMe model trained each on a single time series.
     """
@@ -387,7 +421,18 @@ def auto_wf_umheme_each(dataset_init : str, data_path : str, data_config_path : 
     return whole_errors
 
 
-def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip : int = 1, weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'], loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']):
+def auto_wf_umheme_all(dataset_init : str,
+                       data_path : str,
+                       data_config_path : str,
+                       model_config_paths : str | list[str],
+                       prop : float = (0.7, 0.1, 0.2),
+                       shuffle_data : bool = False,
+                       shuffle_internal : bool = True,
+                       random_state : int = 42,
+                       skip : int = 1,
+                       weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
+                       loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']
+                       ):
     """
     Return automatic workflow for a single UMHEMe model trained on all time series.
     """
@@ -433,7 +478,13 @@ def auto_wf_umheme_all(dataset_init : str, data_path : str, data_config_path : s
     return error_dict
 
 
-def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], prop : float = (0.7, 0.1, 0.2), random_state : int = 42):
+def auto_wf_arima_each(dataset_init : str,
+                       data_path : str,
+                       data_config_path : str,
+                       model_config_paths : str | list[str],
+                       prop : float = (0.7, 0.1, 0.2),
+                       random_state : int = 42
+                       ):
     """
     Return automatic workflow for ARIMA model.
     """
@@ -456,7 +507,6 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
         print(f'\n--------------------\nProcessing time series with ID:\t{uid}\n--------------------')
         # change data_config_path to only load the time series with the current uid
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
-    
         # load data
         train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
                                                     data_path = data_path,
@@ -466,14 +516,12 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
                                                     shuffle_data = False,
                                                     shuffle_internal = False,
                                                     random_state = random_state)
-        
         # define model
         model_config_path = model_config_paths[2] if isinstance(model_config_paths, list) else model_config_paths
-
         with open(data_config_path, 'r') as f:
             config = json.load(f)
 
-        skip = config['skip']
+        skip = config[datasets[dataset_init]]['skip']
 
         json_handler(file_path = model_config_path, skip = skip)
 
@@ -496,7 +544,25 @@ def auto_wf_arima_each(dataset_init : str, data_path : str, data_config_path : s
     return whole_errors
 
 
-def auto_workflow(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn_each : bool = False, tcn_all : bool = False, xgb_each : bool = False, xgb_all : bool = False, umheme_each : bool = False, umheme_all : bool = False, arima : bool = False, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42, skip_umheme : int = 1, weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'], loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']):
+def auto_workflow(dataset_init : str,
+                  data_path : str,
+                  data_config_path : str,
+                  model_config_paths : str | list[str],
+                  tcn_each : bool = False,
+                  tcn_all : bool = False,
+                  xgb_each : bool = False,
+                  xgb_all : bool = False,
+                  umheme_each : bool = False,
+                  umheme_all : bool = False,
+                  arima : bool = False,
+                  prop : float = (0.7, 0.1, 0.2),
+                  shuffle_data : bool = False,
+                  shuffle_internal : bool = True,
+                  random_state : int = 42,
+                  skip_umheme : int = 1,
+                  weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
+                  loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']
+                  ):
     """
     Automatic workflow to instantiate the dataset train/val/test sets, define, train and evaluate models.
 

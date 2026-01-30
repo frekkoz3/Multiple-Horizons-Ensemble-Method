@@ -228,7 +228,10 @@ class TCN(nn.Module, DirectModel):
         Returns:
         - None
         """
-        torch.save(self.state_dict(), file_path)
+        if file_path.endswith(".pkl"):
+            torch.save(self.state_dict(), file_path)
+        else:
+            torch.save(self.state_dict(), f"{file_path}.pkl")
         return
 
 
@@ -315,7 +318,6 @@ class ARIMAModel(DirectModel):
                 self.Q = config['Q']
 
         self.skip = config['skip']
-
 
     def fit(self, y: np.ndarray):
         if self.auto_arima:

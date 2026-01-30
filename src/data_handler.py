@@ -46,8 +46,6 @@ def retrieve_data_day_from_index(time_series :  np.ndarray, index :  int, data_p
     else:
         real_index = index + n_train + n_val
 
-    print(real_index)
-
     if 'traffic.csv' in data_path:    # if dataset 'traffic.csv', the target column is 'hours_from_start'
         hours_from_start = dataset.iloc[real_index]['hours_from_start']
         day = f"Day {hours_from_start // 24}, Hour {hours_from_start % 24}"
