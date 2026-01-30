@@ -157,10 +157,7 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     for model_name, model_instance in models.items():
         print(f"\nEvaluate model: {model_name}")
         
-        if "UMHEMe" in model_name:
-            results[model_name] = model_instance.predict(test[0])
-        else:
-            results[model_name] = model_instance.predict(test[0])
+        results[model_name] = model_instance.predict(test[0])
     
     if len(results) == 1:
         single_prediction = next(iter(results.values()))
@@ -526,7 +523,7 @@ def auto_wf_arima_each(dataset_init : str,
         json_handler(file_path = model_config_path, skip = skip)
 
         models = models_definer(dataset_init = [dataset_init],
-                                loss_type = ['horizon_weighted_huber'],
+                                loss_type = ['mse'],
                                 model_type = ['ARIMA'],
                                 weight_type = ['uni'],
                                 data_config_path = data_config_path,
@@ -538,7 +535,7 @@ def auto_wf_arima_each(dataset_init : str,
     
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
-
+        print(error)
         whole_errors[uid] = error
 
     return whole_errors

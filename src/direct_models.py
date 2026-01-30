@@ -343,28 +343,32 @@ class ARIMAModel(DirectModel):
         if self.auto_arima:
             self.model.update(memory)
         else:
-            self.model = self.model.append(memory, refit=False)
+            self.model = self.model.extend(memory)
         
 
         for t in range(self.window, len(test), self.skip):
-            
+            print(f'Prediction for test set at index from:\t {t}\t to \t{t+self.skip}\t')
             # forecast
             if self.auto_arima:
                 # Pmdarima uses predict
-                forecast = self.model.predict(n_periods=self.horizon)
+                n_periods = self.horizon if t+self.horizon < len(test) else len(test)-t
+                forecast = self.model.predict(n_periods=n_periods) 
             else:
                 # Statsmodels uses forecast
                 forecast = self.model.forecast(steps=self.horizon)
             
             y_hat.append(forecast)
-            errors.append(test[t:t + self.horizon] - forecast[:self.horizon])
+
+            forecast = forecast[:len(test[t:t + self.horizon])] # we are at the end of the time series test set !
+            
+            errors.append(test[t:t + self.horizon] - forecast) 
 
             # update ARIMA with REAL value ---
             true_values = list(test[t:t + self.skip])
             if self.auto_arima:
                 self.model.update(true_values)
             else:
-                self.model = self.model.append(true_values, refit=False)
+                self.model = self.model.extend(true_values)
 
         mse_error = np.mean([np.mean(err**2) for err in errors])
 
