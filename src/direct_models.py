@@ -80,10 +80,10 @@ class TCN(nn.Module, DirectModel):
 
 
         # ---- TCN Hyperparameters ----
-        inner_layers_dim = config['inner_layers_dim']
-        kernel_size = config['kernel_size']
-        stride = config['stride']
-        padding = config['padding']
+        self.inner_layers_dim = config['inner_layers_dim']
+        self.kernel_size = config['kernel_size']
+        self.stride = config['stride']
+        self.padding = config['padding']
 
         self.n_epochs = config['n_epochs']
 
@@ -108,27 +108,27 @@ class TCN(nn.Module, DirectModel):
 
         self.conv_layers.append(nn.Conv1d(
             in_channels=1,
-            out_channels=inner_layers_dim[0],
-            kernel_size=kernel_size[0],
-            stride=stride,
-            padding=padding
+            out_channels=self.inner_layers_dim[0],
+            kernel_size=self.kernel_size[0],
+            stride=self.stride,
+            padding=self.padding
         ))
         for i in range(config['n_layers'] - 2):
             self.conv_layers.append(nn.Conv1d(
-                in_channels=inner_layers_dim[i],
-                out_channels=inner_layers_dim[i+1],
-                kernel_size=kernel_size[i],
-                stride=stride,
-                padding=padding
+                in_channels=self.inner_layers_dim[i],
+                out_channels=self.inner_layers_dim[i+1],
+                kernel_size=self.kernel_size[i],
+                stride=self.stride,
+                padding=self.padding
             ))
         self.conv_layers.append(nn.Conv1d(
-            in_channels=inner_layers_dim[-2],
-            out_channels=inner_layers_dim[-1],
-            kernel_size=kernel_size[-1],
-            stride=stride,
-            padding=padding
+            in_channels=self.inner_layers_dim[-2],
+            out_channels=self.inner_layers_dim[-1],
+            kernel_size=self.kernel_size[-1],
+            stride=self.stride,
+            padding=self.padding
         ))
-        self.readout = nn.Linear(inner_layers_dim[-1], self.horizon)       # Features of the last timestamp to the horizon
+        self.readout = nn.Linear(self.inner_layers_dim[-1], self.horizon)       # Features of the last timestamp to the horizon
 
         self.optim = torch.optim.Adam(self.parameters(), lr=config['learning_rate'])
 
@@ -234,6 +234,38 @@ class TCN(nn.Module, DirectModel):
             torch.save(self.state_dict(), f"{file_path}.pkl")
         return
 
+    @classmethod
+    def load_model(cls, file_path: str, config_path: str = None):
+        """
+        Smart loader for TCN.
+        - file_path: Path to model file (.pt or legacy .pkl)
+        - config_path: Path to .json config (REQUIRED for legacy .pkl files)
+        """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"No file found at {file_path}")
+
+        # Attempt to load with torch
+        try:
+            checkpoint = torch.load(file_path, map_location='cpu') # Safer for CPU inference
+        except Exception as e:
+            raise ValueError(f"Failed to load torch model: {e}")
+
+        if isinstance(checkpoint, dict):
+            if config_path is None:
+                raise ValueError(f"Legacy model at {file_path} requires 'config_path' to initialize architecture.")
+            
+            # Init architecture from external JSON
+            model = cls(file_path=config_path)
+            model.load_state_dict(checkpoint)
+            print(f"Loaded legacy weights from {file_path} using config {config_path}")
+            
+        else:
+            raise ValueError("Unknown TCN file format.")
+
+        model.eval()
+        return model
+        
+
 
 class XGBoost(DirectModel):
     def __init__(self, file_path: str, horizon : int | None = None, window : int | None = None):
@@ -271,24 +303,36 @@ class XGBoost(DirectModel):
 
         return final_rmse ** 2
 
+    
     def predict(self, X: np.ndarray):
         return self.reg.predict(X)
 
+    
     def save_model(self, file_path: str):
         """
-        Save the model to the specified file path.
-
-        Params:
-        - file_path : str
-
-        Returns:
-        - None
+        Saves the entire class instance (Config + Weights + Wrapper).
         """
-        if not file_path.endswith(".json"):
-            self.reg.save_model(f"{file_path}.json")
-        else:
-            self.reg.save_model(file_path)
-        return
+        # Ensure we use .pkl extension for Python objects
+        if file_path.endswith('.json'):
+            file_path = file_path.replace('.json', '.pkl')
+        elif not file_path.endswith('.pkl'):
+            file_path += '.pkl'
+
+        # joblib.dump saves 'self', which includes:
+        joblib.dump(self, file_path)
+        print(f"XGBoost model (full object) saved to {file_path}")
+
+    @classmethod
+    def load_model(cls, file_path: str):
+        """
+        Loads the entire class instance.
+        """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+            
+        # This restores the object exactly as it was before saving
+        model = joblib.load(file_path)
+        return model
 
 
 class ARIMAModel(DirectModel):
@@ -375,46 +419,37 @@ class ARIMAModel(DirectModel):
         return mse_error
         
 
-    def save_model(self, path: str):
+    def save_model(self, file_path: str):
         """
-        Saves the fitted model to the specified path.
-        Handles the distinction between pmdarima (joblib) and statsmodels (native save).
+        Saves the ENTIRE wrapper class (Configuration + Internal Model).
+        This works for both pmdarima and statsmodels backends.
         """
-        if self.model is None:
-            raise ValueError("The model has not been fitted yet.")
+        # Ensure correct extension
+        if file_path.endswith('.json'):
+             file_path = file_path.replace('.json', '.pkl')
+        elif not file_path.endswith('.pkl'):
+             file_path += '.pkl'
 
-        if self.auto_arima:
-            # pmdarima models are standard python objects, best saved with joblib
-            joblib.dump(self.model, path)
-        else:
-            # statsmodels Results objects have a dedicated save method
-            # that handles internal wrappers better than raw pickling
-            self.model.save(path)
+        # Check if fitted
+        if self.model is None:
+            print(f"Warning: Saving an unfitted ARIMA model to {file_path}")
+
+        # joblib handles the internal serialization of pmdarima or statsmodels objects automatically
+        joblib.dump(self, file_path)
+        print(f"ARIMA model (full wrapper) saved to {file_path}")
 
     
-    def load_model(self, path: str):
+    @classmethod
+    def load_model(cls, file_path: str):
         """
-        Loads a saved model from disk into self.model.
+        Loads the ENTIRE wrapper class.
         """
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"No model file found at {path}")
-
-        if self.auto_arima:
-            self.model = joblib.load(path)
-        else:
-            # Use the static load method from ARIMAResults
-            self.model = ARIMAResults.load(path)
-                
-
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"No model file found at {file_path}")
         
-
-
-        
-
-        
-
-        
-        
+        # This restores the wrapper, the config, AND the correct inner model type
+        model = joblib.load(file_path)
+        return model
 
 
 if __name__ == '__main__':

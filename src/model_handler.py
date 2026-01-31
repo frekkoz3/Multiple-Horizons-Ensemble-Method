@@ -166,6 +166,36 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     return results
 
 
+def model_loader(file_path: str, config_path : str | None = None):
+    """
+    Loads ANY model (TCN, XGB, ARIMA, UMHEMe).
+    Automatically detects if it's a legacy TCN weight dict or a new Full Object.
+    """
+    if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+        return None
+
+    # Try loading as a standard Pickle/Joblib object first
+    try:
+        obj = joblib.load(file_path)
+        
+        # Check if it's a raw dictionary (Legacy TCN weights)
+        if isinstance(obj, dict) and 'config' not in obj:
+             raise ValueError("Detected Legacy TCN Weights (Dict)")
+        
+        return obj # It's a full object (XGB, ARIMA, UMHEMe)
+
+    except (ValueError, Exception):
+        # If joblib fails or we found a dict, try Torch Loader (for TCN)
+        try:
+            # This calls our smart TCN loader which handles both New and Old formats
+            # We pass TCN_PATH_CONFIG_LOAD as a fallback for legacy files
+            return TCN.load_model(file_path, config_path=config_path)
+        except Exception as e:
+            print(f"Failed to load {file_path}: {e}")
+            return None
+
+
 def models_saver(errors: dict):
     # ---------------------------------------------------------
     # SAVING SUBROUTINE
@@ -213,7 +243,7 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
     """
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-
+    
     # Load data_config
     with open(data_config_path, 'r') as f:
         config = json.load(f)
@@ -230,6 +260,8 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
     for uid in unique_id:
         print(f'\n--------------------\nProcessing time series with ID:\t{uid}\n--------------------')
         # change data_config_path to only load the time series with the current uid
+        models_path_save = f'../models/{datasets[dataset_init]}/tcn/{uid}' if tcn else f'../models/{datasets[dataset_init]}/xgb/{uid}'
+
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
         
         # load data
@@ -265,9 +297,9 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
         
         # train model
         if tcn:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/tcn/{uid}')
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save')
         else:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/{uid}')
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save')
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -584,6 +616,8 @@ def auto_workflow(dataset_init : str,
     - shuffle_data : bool, whether to shuffle the data before splitting
     - shuffle_internal : bool, whether to shuffle the internal time series before splitting
     - random_state : int, random state for reproducibility
+
+    
     
     Returns:
     -------------------------------------------------------------------------------------------

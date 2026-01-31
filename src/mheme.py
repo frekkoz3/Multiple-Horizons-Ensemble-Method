@@ -338,38 +338,26 @@ class UMHEMe:
             )
             fig.show()
 
-    def save_model(self, model_path : str):
-        """
-        Save the whole ensemble model to disk.
-
-        Params:
-        - model_path : pickle path (path_to_model.pkl) where to save the model
-        """
-        assert model_path.endswith('.pkl'), "Model path must end with .pkl"
-
+    def save_model(self, model_path: str):
+        """Save the entire ensemble object."""
+        if not model_path.endswith('.pkl'):
+            model_path += '.pkl'
+        
         directory = os.path.dirname(model_path)
         if directory:
             os.makedirs(directory, exist_ok=True)
-        
-        with open(model_path, 'wb') as f:
-            pickle.dump(self, f)
-        return
-
+            
+        joblib.dump(self, model_path)
+        print(f"UMHEMe ensemble saved to {model_path}")
 
     @staticmethod
-    def load_model(model_path : str):
-        """
-        Load the whole ensemble model from disk.
-
-        Params:
-        - model_path : pickle path (path_to_model.pkl) from where to load the model
-
-        Returns:
-        - UMHEMe instance
-        """
-        assert model_path.endswith('.pkl'), "Model must be a valid pickle file"
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
+    def load_model(model_path: str):
+        """Load the entire ensemble object."""
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"No model found at {model_path}")
+        
+        # Load object
+        model = joblib.load(model_path)
         return model
 
 
