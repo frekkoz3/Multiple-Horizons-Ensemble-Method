@@ -20,7 +20,7 @@
 
 ## EVALUATION LISTS
 
-- [ ] electricity
+- [x] electricity
 - [ ] traffic
 - [ ] energy
 - [ ] volatility
