@@ -134,9 +134,9 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
         if save_models:
             os.makedirs(models_path_save, exist_ok=True)
             if np.strings.endswith(model_name, '.pkl'):
-                model_instance.save_model(f"{models_path_save}\{model_name}")
+                model_instance.save_model(f"{models_path_save}/{model_name}")
             else:
-                model_instance.save_model(f"{models_path_save}\{model_name}_{dataset_init}.pkl")
+                model_instance.save_model(f"{models_path_save}/{model_name}_{dataset_init}.pkl")
 
     return 
 
@@ -480,7 +480,9 @@ def auto_wf_arima_each(dataset_init : str,
                        data_config_path : str,
                        model_config_paths : str | list[str],
                        prop : float = (0.7, 0.1, 0.2),
-                       random_state : int = 42
+                       random_state : int = 42,
+                       shuffle_data : bool = False,
+                       shuffle_internal : bool = False
                        ):
     """
     Return automatic workflow for ARIMA model.
@@ -510,8 +512,8 @@ def auto_wf_arima_each(dataset_init : str,
                                                     data_config_path = data_config_path,
                                                     is_arima = True,
                                                     prop = prop,
-                                                    shuffle_data = False,
-                                                    shuffle_internal = False,
+                                                    shuffle_data = shuffle_data,
+                                                    shuffle_internal = shuffle_internal,
                                                     random_state = random_state)
         # define model
         model_config_path = model_config_paths[2] if isinstance(model_config_paths, list) else model_config_paths
