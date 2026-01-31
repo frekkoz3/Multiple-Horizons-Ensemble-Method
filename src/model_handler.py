@@ -297,9 +297,9 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
         
         # train model
         if tcn:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save')
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
         else:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save')
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -719,5 +719,6 @@ def auto_workflow(dataset_init : str,
     
     return whole_errors
     
-if __name__ == "__main__":
+if __name__ == "__main__" :
+    
     pass
