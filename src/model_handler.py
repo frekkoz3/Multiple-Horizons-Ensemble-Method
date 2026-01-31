@@ -166,7 +166,7 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     return results
 
 
-def model_loader(file_path: str, config_path : str | None = None):
+def models_loader(file_path: str, config_path : str | None = None):
     """
     Loads ANY model (TCN, XGB, ARIMA, UMHEMe).
     Automatically detects if it's a legacy TCN weight dict or a new Full Object.
@@ -196,7 +196,7 @@ def model_loader(file_path: str, config_path : str | None = None):
             return None
 
 
-def models_saver(errors: dict):
+def models_saver(dataset_init : str, errors: dict):
     # ---------------------------------------------------------
     # SAVING SUBROUTINE
     # ---------------------------------------------------------
@@ -205,7 +205,7 @@ def models_saver(errors: dict):
     # 1. FLATTEN DATA FOR CSV (Analysis Ready)
     # This converts the nested dictionary into a list of records
     records = []
-    for method_name, errors_dict in whole_errors.items():
+    for method_name, errors_dict in errors.items():
         # errors_dict is e.g. {'ts_01': 0.05} or {'whole_dataset': 0.05}
         for uid, error_val in errors_dict.items():
             records.append({
@@ -223,21 +223,32 @@ def models_saver(errors: dict):
     
     # 2. SAVE RAW JSON (Backup)
     # Necessary for full reproducibility or if data becomes non-tabular later
-    class NumpyEncoder(json.JSONEncoder):
+    class TypeEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, (np.integer, np.floating)):
                 return float(obj)
             elif isinstance(obj, np.ndarray):
                 return obj.tolist()
+            elif isinstance(obj, torch.Tensor):
+                return obj.tolist()
             return super().default(obj)
 
     json_filename = f"../models/results/errors_{dataset_init}_{timestamp}.json"
     with open(json_filename, 'w') as f:
-        json.dump(whole_errors, f, indent=4, cls=NumpyEncoder)
+        json.dump(errors, f, indent=4, cls=TypeEncoder)
     print(f"Results (JSON) saved to: {json_filename}")
 
 
-def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path : str, model_config_paths : str | list[str], tcn : bool = True, prop : float = (0.7, 0.1, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state : int = 42):
+def auto_wf_baseline_each(dataset_init : str, 
+                          data_path : str, 
+                          data_config_path : str, 
+                          model_config_paths : str | list[str], 
+                          tcn : bool = True, 
+                          prop : float = (0.7, 0.1, 0.2), 
+                          shuffle_data : bool = False, 
+                          shuffle_internal : bool = True, 
+                          random_state : int = 42, 
+                          pretrained_model : bool = False):
     """
     Return automatic workflow for 100 TCN baseline model trained each on a single time series.
     """
@@ -294,12 +305,22 @@ def auto_wf_baseline_each(dataset_init : str, data_path : str, data_config_path 
                                     data_config_path = data_config_path,
                                     model_config_paths = [model_config_path]
                                     )
-        
-        # train model
-        if tcn:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save')
+
+        if not pretrained_model: 
+            # train model
+            if tcn:
+                models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
+            else:
+                models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
         else:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save')
+            # models are already pre-trained
+            model_name, _ = list(models.items())[0]
+            trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+            trained_model = models_loader(file_path = trained_model_path, 
+                                     config_path = model_config_path
+                                    )
+            models[model_name] = trained_model
+            
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -319,14 +340,16 @@ def auto_wf_baseline_all(dataset_init : str,
                          prop : float = (0.7, 0.1, 0.2),
                          shuffle_data : bool = False,
                          shuffle_internal : bool = True,
-                         random_state : int = 42
+                         random_state : int = 42,
+                         pretrained_model : bool = False
                          ):
     """
     Return automatic workflow for a single TCN baseline model trained on all time series.
     """
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-
+    models_path_save = f'../models/{datasets[dataset_init]}/tcn/all' if tcn else f'../models/{datasets[dataset_init]}/xgb/all'
+    
     # load data
     json_handler(file_path = data_config_path, id_target = "ALL", dataset = datasets[dataset_init])
     train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
@@ -360,11 +383,20 @@ def auto_wf_baseline_all(dataset_init : str,
                                 )
 
     # train model
-    if tcn:
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/tcn/all')
+    if not pretrained_model:
+        if tcn:
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
+        else:
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
     else:
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/xgb/all')
-
+        # models are already pre-trained
+        model_name, _ = list(models.items())[0]
+        trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+        trained_model = models_loader(file_path = trained_model_path, 
+                                 config_path = model_config_path
+                                )
+        models[model_name] = trained_model
+        
     # evaluate model
     prediction = models_evaluator(models, test, dataset_init)
     error = mse(prediction, test[1])
@@ -383,14 +415,15 @@ def auto_wf_umheme_each(dataset_init : str,
                         random_state : int = 42,
                         skip : int = 1,
                         weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
-                        loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']
+                        loss_type : list[str] | None = ['horizon_weighted_huber', 'mse'],
+                        pretrained_model : bool = False
                         ):
     """
     Return automatic workflow for UMHEMe model trained each on a single time series.
     """
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-
+    
     # Load data_config
     with open(data_config_path, 'r') as f:
         config = json.load(f)
@@ -408,7 +441,8 @@ def auto_wf_umheme_each(dataset_init : str,
         print(f'\n--------------------\nProcessing time series with ID:\t{uid}\n--------------------')
         # change data_config_path to only load the time series with the current uid
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
-        
+        models_path_save = f'../models/{datasets[dataset_init]}/umheme/uid_{uid}_skip_{skip}'
+
         # load data
         train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
                                                     data_path = data_path,
@@ -433,12 +467,22 @@ def auto_wf_umheme_each(dataset_init : str,
                                 )
         
         # train model
-        models_trainer(models,
-                       train,
-                       dataset_init,
-                       save_models = True,
-                       models_path_save = f'../models/{datasets[dataset_init]}/umheme/uid_{uid}_skip_{skip}'
-                       )
+        if not pretrained_model:
+                models_trainer(models,
+                               train,
+                               dataset_init,
+                               save_models = True,
+                               models_path_save = models_path_save
+                               )
+        else:
+            # models are already pre-trained
+            model_name, _ = list(models.items())[0]
+            trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+            trained_model = models_loader(file_path = trained_model_path, 
+                                     config_path = model_config_path
+                                    )
+            models[model_name] = trained_model
+            
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -460,13 +504,15 @@ def auto_wf_umheme_all(dataset_init : str,
                        random_state : int = 42,
                        skip : int = 1,
                        weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
-                       loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']
+                       loss_type : list[str] | None = ['horizon_weighted_huber', 'mse'],
+                       pretrained_model : bool = False
                        ):
     """
     Return automatic workflow for a single UMHEMe model trained on all time series.
     """
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
+    models_path_save = f'../models/{datasets[dataset_init]}/umheme/all'
 
     # load data
     json_handler(file_path = data_config_path, id_target = "ALL", dataset = datasets[dataset_init])
@@ -492,12 +538,21 @@ def auto_wf_umheme_all(dataset_init : str,
                             skip = skip)
     
     # train model
-    models_trainer(models,
-                   train,
-                   dataset_init,
-                   save_models = True,
-                   models_path_save = f'../models/{datasets[dataset_init]}/umheme/all'
-                   )
+    if not pretrained_model:
+        models_trainer(models,
+                       train,
+                       dataset_init,
+                       save_models = True,
+                       models_path_save = models_path_save
+                       )
+    else:
+        # models are already pre-trained
+        model_name, _ = list(models.items())[0]
+        trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+        trained_model = models_loader(file_path = trained_model_path, 
+                                 config_path = model_config_path
+                                )
+        models[model_name] = trained_model
 
     # evaluate model
     prediction = models_evaluator(models, test, dataset_init)
@@ -514,14 +569,16 @@ def auto_wf_arima_each(dataset_init : str,
                        prop : float = (0.7, 0.1, 0.2),
                        random_state : int = 42,
                        shuffle_data : bool = False,
-                       shuffle_internal : bool = False
+                       shuffle_internal : bool = False,
+                       pretrained_model : bool = False
                        ):
     """
     Return automatic workflow for ARIMA model.
     """
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
-
+    
+    
     # Load data_config
     with open(data_config_path, 'r') as f:
         config = json.load(f)
@@ -538,6 +595,8 @@ def auto_wf_arima_each(dataset_init : str,
         print(f'\n--------------------\nProcessing time series with ID:\t{uid}\n--------------------')
         # change data_config_path to only load the time series with the current uid
         json_handler(file_path = data_config_path, id_target = uid, dataset = datasets[dataset_init])
+        models_path_save = f'../models/{datasets[dataset_init]}/arima/{uid}'
+        
         # load data
         train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
                                                     data_path = data_path,
@@ -563,13 +622,21 @@ def auto_wf_arima_each(dataset_init : str,
                                 data_config_path = data_config_path,
                                 model_config_paths = [model_config_path]
                                 )
-    
-        # train model
-        models_trainer(models, train, dataset_init, save_models = True, models_path_save = f'../models/{datasets[dataset_init]}/arima/all')
-    
+
+        if not pretrained_model:
+            # train model
+            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
+        else:
+            # models are already pre-trained
+            model_name, _ = list(models.items())[0]
+            trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+            trained_model = models_loader(file_path = trained_model_path, 
+                                     config_path = model_config_path
+                                    )
+            models[model_name] = trained_model
+            
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
-        print(error)
         whole_errors[uid] = error
 
     return whole_errors
@@ -592,7 +659,8 @@ def auto_workflow(dataset_init : str,
                   random_state : int = 42,
                   skip_umheme : int = 1,
                   weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
-                  loss_type : list[str] | None = ['horizon_weighted_huber', 'mse']
+                  loss_type : list[str] | None = ['horizon_weighted_huber', 'mse'],
+                  pretrained_model : bool = False
                   ):
     """
     Automatic workflow to instantiate the dataset train/val/test sets, define, train and evaluate models.
@@ -617,7 +685,7 @@ def auto_workflow(dataset_init : str,
     - shuffle_internal : bool, whether to shuffle the internal time series before splitting
     - random_state : int, random state for reproducibility
 
-    
+    - pretrained_model : bool, whether to load or not pretrained models
     
     Returns:
     -------------------------------------------------------------------------------------------
@@ -637,7 +705,8 @@ def auto_workflow(dataset_init : str,
                                                 prop = prop,
                                                 shuffle_data = shuffle_data,
                                                 shuffle_internal = shuffle_internal,
-                                                random_state = random_state
+                                                random_state = random_state,
+                                                pretrained_model = pretrained_model
                                                 )
         whole_errors['tcn_each'] = tcn_each_errors
     if tcn_all:
@@ -649,7 +718,8 @@ def auto_workflow(dataset_init : str,
                                               prop = prop,
                                               shuffle_data = shuffle_data,
                                               shuffle_internal = shuffle_internal,
-                                              random_state = random_state
+                                              random_state = random_state,
+                                              pretrained_model = pretrained_model
                                               )
         whole_errors['tcn_all'] = tcn_all_errors
     if xgb_each:
@@ -661,7 +731,8 @@ def auto_workflow(dataset_init : str,
                                                 prop = prop,
                                                 shuffle_data = shuffle_data,
                                                 shuffle_internal = shuffle_internal,
-                                                random_state = random_state
+                                                random_state = random_state,
+                                                pretrained_model = pretrained_model
                                                 )
         whole_errors['xgb_each'] = xgb_each_errors
     if xgb_all:
@@ -673,7 +744,8 @@ def auto_workflow(dataset_init : str,
                                               prop = prop,
                                               shuffle_data = shuffle_data,
                                               shuffle_internal = shuffle_internal,
-                                              random_state = random_state
+                                              random_state = random_state,
+                                              pretrained_model = pretrained_model
                                               )
         whole_errors['xgb_all'] = xgb_all_errors
     if umheme_each:
@@ -687,7 +759,8 @@ def auto_workflow(dataset_init : str,
                                                  random_state = random_state,
                                                  skip = skip_umheme,
                                                  weight_type = weight_type,
-                                                 loss_type = loss_type
+                                                 loss_type = loss_type,
+                                                 pretrained_model = pretrained_model
                                                  )
         whole_errors['umheme_each'] = umheme_each_errors
     if umheme_all:
@@ -701,7 +774,8 @@ def auto_workflow(dataset_init : str,
                                                random_state = random_state,
                                                skip = skip_umheme,
                                                weight_type = weight_type,
-                                               loss_type = loss_type
+                                               loss_type = loss_type,
+                                               pretrained_model = pretrained_model
                                                )
         whole_errors['umheme_all'] = umheme_all_errors
     if arima:
@@ -710,12 +784,13 @@ def auto_workflow(dataset_init : str,
                                           data_config_path,
                                           model_config_paths,
                                           prop = prop,
-                                          random_state = random_state
+                                          random_state = random_state,
+                                          pretrained_model = pretrained_model
                                           )
         whole_errors['arima'] = arima_errors
 
     # save whole_errors as json
-    model_saver(whole_errors)
+    models_saver(dataset_init = dataset_init, errors = whole_errors)
     
     return whole_errors
     

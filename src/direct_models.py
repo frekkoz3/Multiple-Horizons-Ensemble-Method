@@ -391,7 +391,6 @@ class ARIMAModel(DirectModel):
         
 
         for t in range(self.window, len(test), self.skip):
-            print(f'Prediction for test set at index from:\t {t}\t to \t{t+self.skip}\t')
             # forecast
             if self.auto_arima:
                 # Pmdarima uses predict
