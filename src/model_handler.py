@@ -134,9 +134,9 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
         if save_models:
             os.makedirs(models_path_save, exist_ok=True)
             if np.strings.endswith(model_name, '.pkl'):
-                model_instance.save_model(f"{models_path_save}\{model_name}")
+                model_instance.save_model(f"{models_path_save}/{model_name}")
             else:
-                model_instance.save_model(f"{models_path_save}\{model_name}_{dataset_init}.pkl")
+                model_instance.save_model(f"{models_path_save}/{model_name}_{dataset_init}.pkl")
 
     return 
 
@@ -157,10 +157,7 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     for model_name, model_instance in models.items():
         print(f"\nEvaluate model: {model_name}")
         
-        if "UMHEMe" in model_name:
-            results[model_name] = model_instance.predict(test[0])
-        else:
-            results[model_name] = model_instance.predict(test[0])
+        results[model_name] = model_instance.predict(test[0])
     
     if len(results) == 1:
         single_prediction = next(iter(results.values()))
@@ -483,7 +480,9 @@ def auto_wf_arima_each(dataset_init : str,
                        data_config_path : str,
                        model_config_paths : str | list[str],
                        prop : float = (0.7, 0.1, 0.2),
-                       random_state : int = 42
+                       random_state : int = 42,
+                       shuffle_data : bool = False,
+                       shuffle_internal : bool = False
                        ):
     """
     Return automatic workflow for ARIMA model.
@@ -513,8 +512,8 @@ def auto_wf_arima_each(dataset_init : str,
                                                     data_config_path = data_config_path,
                                                     is_arima = True,
                                                     prop = prop,
-                                                    shuffle_data = False,
-                                                    shuffle_internal = False,
+                                                    shuffle_data = shuffle_data,
+                                                    shuffle_internal = shuffle_internal,
                                                     random_state = random_state)
         # define model
         model_config_path = model_config_paths[2] if isinstance(model_config_paths, list) else model_config_paths
@@ -526,7 +525,7 @@ def auto_wf_arima_each(dataset_init : str,
         json_handler(file_path = model_config_path, skip = skip)
 
         models = models_definer(dataset_init = [dataset_init],
-                                loss_type = ['horizon_weighted_huber'],
+                                loss_type = ['mse'],
                                 model_type = ['ARIMA'],
                                 weight_type = ['uni'],
                                 data_config_path = data_config_path,
@@ -538,7 +537,7 @@ def auto_wf_arima_each(dataset_init : str,
     
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
-
+        print(error)
         whole_errors[uid] = error
 
     return whole_errors
