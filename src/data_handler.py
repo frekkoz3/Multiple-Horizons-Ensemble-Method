@@ -157,16 +157,45 @@ def data_differentiator(time_series: np.ndarray, diff_order: list[int]) -> np.nd
     return time_series
 
 
-def data_time_aggregator(time_series: np.ndarray, freq: str) -> np.ndarray:
+def data_time_aggregator(time_series: np.ndarray, freq: str | int) -> np.ndarray:
     """
     Aggregate time series data to a different frequency.
-    Params:
-    - time_series : array of shape (n_samples,)
-    - freq : string, frequency to aggregate to 
+    Handles both 1D arrays and 2D matrices (Time x UIDs).
     """
-    time_series = pd.Series(time_series).resample(freq).mean().to_numpy()
+    
+    # 1. Gestione Matrice 2D (Multi-UID) vs 1D
+    if time_series.ndim == 2:
+        # Se è 2D (es. 52560 righe, 100 colonne), usiamo DataFrame.
+        # Ogni colonna rappresenta un UID diverso.
+        df = pd.DataFrame(time_series)
+    else:
+        # Se è 1D, usiamo Series
+        df = pd.Series(time_series)
 
-    return time_series
+    # 2. Gestione della Frequenza
+    if isinstance(freq, int):
+        # CASO A: Frequenza numerica (es. freq=4 significa media ogni 4 righe)
+        # Raggruppa per indice intero
+        time_series_agg = df.groupby(df.index // freq).mean().to_numpy()
+        
+    elif isinstance(freq, str):
+        # CASO B: Frequenza stringa (es. '1H')
+        # .resample() richiede un indice temporale. Poiché time_series è un numpy array
+        # senza date, dobbiamo creare un indice fittizio per farlo funzionare.
+        
+        # Assumiamo una data di partenza arbitraria e una frequenza base (es. 15min o 10min)
+        # Se il tuo dataset originale è ogni 15 minuti ('15T'), mettilo qui:
+        base_freq = '15T'  
+        
+        df.index = pd.date_range(start="2000-01-01", periods=len(df), freq=base_freq)
+        
+        # Ora resample funzionerà su tutte le colonne (UID) contemporaneamente
+        time_series_agg = df.resample(freq).mean().to_numpy()
+        
+    else:
+        raise ValueError(f"Frequenza {freq} non supportata. Usa int o str.")
+
+    return time_series_agg
 
 
 def train_validation_test_split(X : np.ndarray, y : np.ndarray, proportions : tuple = (0.6, 0.2, 0.2), shuffle_data : bool = False, shuffle_internal : bool = True, random_state: int | None = None) -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]:

@@ -1,3 +1,11 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d5613e1d63a29accd28a120e965468f0e67e1585108f0d50454b08b3a5899432
-size 201
+{
+    "window": 60,
+    "horizon": 20,
+    "n_estimators": 1,
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "device": "cpu",
+    "loss": "mse",
+    "weights_decay": "uni",
+    "skip": 5
+}
