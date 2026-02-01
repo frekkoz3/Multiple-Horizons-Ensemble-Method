@@ -166,7 +166,7 @@ def models_evaluator(models : dict, test : list[np.ndarray], dataset_init: str):
     return results
 
 
-def models_loader(file_path: str, config_path : str | None = None):
+def models_loader(file_path: str, config_path : str | None = None, is_arima = False):
     """
     Loads ANY model (TCN, XGB, ARIMA, UMHEMe).
     Automatically detects if it's a legacy TCN weight dict or a new Full Object.
@@ -174,26 +174,34 @@ def models_loader(file_path: str, config_path : str | None = None):
     if not os.path.exists(file_path):
         print(f"File not found: {file_path}")
         return None
-
-    # Try loading as a standard Pickle/Joblib object first
-    try:
-        obj = joblib.load(file_path)
-        
-        # Check if it's a raw dictionary (Legacy TCN weights)
-        if isinstance(obj, dict) and 'config' not in obj:
-             raise ValueError("Detected Legacy TCN Weights (Dict)")
-        
-        return obj # It's a full object (XGB, ARIMA, UMHEMe)
-
-    except (ValueError, Exception):
-        # If joblib fails or we found a dict, try Torch Loader (for TCN)
+    
+    if is_arima:
         try:
-            # This calls our smart TCN loader which handles both New and Old formats
-            # We pass TCN_PATH_CONFIG_LOAD as a fallback for legacy files
-            return TCN.load_model(file_path, config_path=config_path)
+            return ARIMAModel.load_model(config_path)
         except Exception as e:
             print(f"Failed to load {file_path}: {e}")
             return None
+    else:
+
+        # Try loading as a standard Pickle/Joblib object first
+        try:
+            obj = joblib.load(file_path)
+            
+            # Check if it's a raw dictionary (Legacy TCN weights)
+            if isinstance(obj, dict) and 'config' not in obj:
+                raise ValueError("Detected Legacy TCN Weights (Dict)")
+            
+            return obj # It's a full object (XGB, ARIMA, UMHEMe)
+
+        except (ValueError, Exception):
+            # If joblib fails or we found a dict, try Torch Loader (for TCN)
+            try:
+                # This calls our smart TCN loader which handles both New and Old formats
+                # We pass TCN_PATH_CONFIG_LOAD as a fallback for legacy files
+                return TCN.load_model(file_path, config_path=config_path)
+            except Exception as e:
+                print(f"Failed to load {file_path}: {e}")
+                return None
 
 
 def models_saver(dataset_init : str, errors: dict):
@@ -630,7 +638,8 @@ def auto_wf_arima_each(dataset_init : str,
             model_name, _ = list(models.items())[0]
             trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
             trained_model = models_loader(file_path = trained_model_path, 
-                                     config_path = model_config_path
+                                     config_path = model_config_path,
+                                     is_arima=True
                                     )
             models[model_name] = trained_model.rebuild_model(train[0]) # should work
             

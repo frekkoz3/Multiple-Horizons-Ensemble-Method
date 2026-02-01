@@ -31,11 +31,11 @@
 
 - XGBoost each:
 
-  - [x] electricity
+  - [ ] electricity
   - [ ] traffic
-  - [x] solar
-  - [x] volatility
-  - [x] wind
+  - [ ] solar
+  - [ ] volatility
+  - [ ] wind
 
 - XGBoost all:
 
@@ -51,4 +51,4 @@
   - [ ] traffic
   - [ ] energy
   - [ ] volatility
-  - [ ] wind
+  - [x] wind

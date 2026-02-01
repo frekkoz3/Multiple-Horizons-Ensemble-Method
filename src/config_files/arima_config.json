@@ -1,6 +1,6 @@
 {
-    "window": 168,
-    "horizon": 24,
+    "window": 30,
+    "horizon": 14,
     "auto_arima": false,
     "seasonality": 24,
     "p": 1,
@@ -11,5 +11,5 @@
     "Q": 1,
     "weights_decay": "uni",
     "loss": "mse",
-    "skip": 7
+    "skip": 5
 }
