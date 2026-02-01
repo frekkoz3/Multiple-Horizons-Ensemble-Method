@@ -16,7 +16,7 @@
         "filler": false
     },
     "solar": {
-        "id_target": 0,
+        "id_target": "ALL",
         "id_col": "id",
         "filename": "solar.csv",
         "target_col": "power_mw",
@@ -54,7 +54,7 @@
         "filler": false
     },
     "volatility": {
-        "id_target": ".AEX",
+        "id_target": ".STOXX50E",
         "id_col": "Symbol",
         "filename": "volatility.csv",
         "target_col": "log_vol",
