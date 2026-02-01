@@ -1,7 +1,4 @@
 {
-    "umheme_all": {
-        "whole_dataset": NaN
-    },
     "arima": {
         ".AEX": 0.8123743246052977,
         ".AORD": 0.6109544939756949,

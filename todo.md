@@ -39,7 +39,7 @@
 
 - ARIMA each:
 
-  - [ ] electricity
+  - [x] electricity
   - [x] traffic
   - [ ] solar
   - [x] volatility

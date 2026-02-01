@@ -16,7 +16,7 @@
         "filler": false
     },
     "solar": {
-        "id_target": "ALL",
+        "id_target": 1,
         "id_col": "id",
         "filename": "solar.csv",
         "target_col": "power_mw",

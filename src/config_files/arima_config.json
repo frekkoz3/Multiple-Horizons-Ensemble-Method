@@ -1,5 +1,5 @@
 {
-    "window": 168,
+    "window": 48,
     "horizon": 24,
     "auto_arima": false,
     "seasonality": 24,
@@ -10,6 +10,6 @@
     "D": 1,
     "Q": 1,
     "weights_decay": "uni",
-    "loss": "horizon_weighted_huber",
+    "loss": "mse",
     "skip": 7
 }
