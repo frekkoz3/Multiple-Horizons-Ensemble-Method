@@ -1,5 +1,5 @@
 {
-    "window": 168,
+    "window": 48,
     "horizon": 24,
     "n_layers": 3,
     "inner_layers_dim": [
@@ -18,7 +18,7 @@
     "learning_rate": 0.001,
     "n_epochs": 100,
     "batch_size": 32,
-    "weights_decay": "exp",
+    "weights_decay": "uni",
     "loss": "horizon_weighted_huber",
     "device": "cpu",
     "skip": 5
