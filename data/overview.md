@@ -8,7 +8,7 @@ Original data source, provided by the paper publishers, is available [here](http
 | Dataset     | Domain    | Seasonality            | Noise Level | Key Characteristic              |
 | ----------- | --------- | ---------------------- | ----------- | ------------------------------- |
 | Electricity | Energy    | Strong daily           | Low         | Individual client load diagrams |
-| Traffic     | Transport | Daily / rush-hour      | Moderate    | High-dimensional sensor grid    |
+| Traffic     | Transport | Daily                  | Moderate    | High measures during peak times |
 | Volatility  | Finance   | Weak                   | Very high   | Non-seasonal, abrupt changes    |
 | Solar       | Energy    | Strong / deterministic | Moderate    | Zero values at night            |
 | Wind        | Energy    | Weak / stochastic      | High        | Atmospheric variability         |
@@ -30,13 +30,12 @@ Some key features extrapolated from the Exploratory Data Analysis we performed:
 ---
 ## ELECTRICITY (Electricity Load Diagrams)
 
-This dataset tracks the electricity consumption of hundreds of clients, providing a clear example of human-driven daily cycles.
+The Electricity Load Diagrams dataset is collected from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/) and is commonly used as a benchmark for forecasting models. It exhibits high daily seasonality, and each time series varies significantly in magnitude.
 
 * Content: Consumption values in kW for individual clients.
 * Temporal Features: Strong daily seasonality.
 * Technical Notes:
-  * To obtain kWh, values must be divided by 4.
-  * There are no missing values in this dataset.
+  * There are no missing values.
   * Timestamps follow Portuguese local time.
   * Daylight Saving Time handling: In March (23-hour day), the 1:00-2:00 AM window is set to zero. In October (25-hour day), that window aggregates two hours of consumption.
   * For clients added after 2011, consumption prior to their join date is recorded as zero.
@@ -44,7 +43,7 @@ This dataset tracks the electricity consumption of hundreds of clients, providin
 ---
 ## TRAFFIC (PEMS-SF)
 
-A high-dimensional dataset representing traffic occupancy rates from freeway detectors in the San Francisco Bay Area.
+The PEMS-SF dataset is collected from the UCI Machine Learning Repository and is typically used as a benchmark alongside electricity. The dataset contains 15 months worth of daily data that describes the occupancy rate of different car lanes of the San Francisco bay area freeways across time. The dataset features high daily seasonality in addition to peak hour traffic spikes.
 
 * Content: Occupancy values ranging from 0 to 1, sampled every 10 minutes.
 * Structure: Original 10 minute delayed observations have been aggregated to hourly observations.
@@ -55,7 +54,7 @@ A high-dimensional dataset representing traffic occupancy rates from freeway det
 ---
 ## REALIZED VOLATILITY
 
-A financial dataset focusing on the daily volatility of 31 international stock indices. It is used to evaluate how models handle noisy, non-seasonal data.
+The volatility dataset is collected from the [OMI realized library](https://oxford-man.ox.ac.uk/research/realized-library/) comprising of daily realized volatility computed from the intraday data of 31 stock indices where each index is treated as a time series. The volatility dataset is noisy with no definite seasonality and contains fewer observations than the previous datasets. It is used to contrast with the strongly seasonal electricity and traffic datasets.
 
 * Content: Aggregated daily realized volatility computed from high-frequency intraday returns.
 * Temporal Features: Exhibits weak seasonality and high noise.
@@ -64,7 +63,7 @@ A financial dataset focusing on the daily volatility of 31 international stock i
 ---
 ## SOLAR POWER
 
-A generation dataset from photovoltaic plants characterized by clear, deterministic cycles.
+The solar power dataset is provided by [NREL8](https://www.nrel.gov/research/data-tools). The dataset exhibits daily seasonality and intermittent periods of zero power production during nighttime.
 
 * Content: Solar power generation values.
 * Temporal Features: Strong daily cycles driven by the sun, along with longer-term seasonal weather variations.
@@ -72,6 +71,8 @@ A generation dataset from photovoltaic plants characterized by clear, determinis
 
 ---
 ## WIND POWER
+
+The wind power dataset is collected from Kaggle, measuring the percentage wind power output of 29 european countries. The wind dataset is extremely noisy with slight yearly and monthly seasonality. Furthermore, in contrast to the other datasets, wind power is completely independent of known time inputs and will serve as an interesting comparison to the other datasets.
 
 A dataset covering wind power generation across 29 countries, reflecting the stochastic nature of weather.
 
