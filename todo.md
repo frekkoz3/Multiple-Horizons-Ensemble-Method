@@ -16,7 +16,7 @@
 - UMHEMe each:
 
   - [x] electricity
-  - [ ] traffic
+  - [x] traffic
   - [x] solar
   - [x] volatility
   - [x] wind
@@ -24,7 +24,7 @@
 - UMHEMe all:
 
   - [x] electricity
-  - [ ] traffic
+  - [x] traffic
   - [ ] solar
   - [ ] volatility
   - [x] wind
@@ -32,23 +32,15 @@
 - XGBoost each:
 
   - [ ] electricity
-  - [ ] traffic
+  - [x] traffic
   - [ ] solar
   - [ ] volatility
   - [ ] wind
 
-- XGBoost all:
-
-  - [ ] electricity
-  - [ ] traffic
-  - [ ] energy
-  - [ ] volatility
-  - [x] wind
-
 - ARIMA each:
 
   - [ ] electricity
-  - [ ] traffic
+  - [x] traffic
   - [ ] energy
   - [ ] volatility
   - [x] wind

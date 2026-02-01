@@ -33,7 +33,7 @@
         "filler": false
     },
     "traffic": {
-        "id_target": 400000,
+        "id_target": 400206,
         "id_col": "id",
         "filename": "traffic.csv",
         "target_col": "occupancy",
