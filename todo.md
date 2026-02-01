@@ -6,22 +6,49 @@
 - [x] Define model to use
 - [x] Define variance (take inspiration from `./literature/readme.md`)
 - [x] **MHEMe (Univariate version) Python Implementation**
-- [ ] **MHEMe** to add to the report (and the readme) the fact that the actual implementation includes horizon skip
+- [x] **MHEMe** to add to the report (and the readme) the fact that the actual implementation includes horizon skip
 - [x] **MHEMe** write a function to stack train, evaluation and test set
-- [ ] literature review of Analyses of Global Monthly Precipitation using Gauge Observations
-- [x] **MHEMe evaluation** : against other combination techniques, against other forecasting methods
-  - [ ] *MHEMe evaluation*
-  - [ ] *Direct Models evaluation*
-  - [ ] *MHEMe uniform weights evaluation*
-  - [ ] *ARIMA evaluation*
-  - [ ] *SARIMA evaluation*
 
 - [ ] **MHEMe presentation** : final presentation of the project (intro to time series, theory behind MHEMe, implementation and results, future ideas)
 
 ## EVALUATION LISTS
 
-- [x] electricity
-- [ ] traffic
-- [ ] energy
-- [ ] volatility
-- [x] wind (missing arima)
+- UMHEMe each:
+
+  - [x] electricity
+  - [ ] traffic
+  - [x] solar
+  - [x] volatility
+  - [x] wind
+
+- UMHEMe all:
+
+  - [x] electricity
+  - [ ] traffic
+  - [ ] solar
+  - [ ] volatility
+  - [x] wind
+
+- XGBoost each:
+
+  - [x] electricity
+  - [ ] traffic
+  - [x] solar
+  - [x] volatility
+  - [x] wind
+
+- XGBoost all:
+
+  - [ ] electricity
+  - [ ] traffic
+  - [ ] energy
+  - [ ] volatility
+  - [x] wind
+
+- ARIMA each:
+
+  - [ ] electricity
+  - [ ] traffic
+  - [ ] energy
+  - [ ] volatility
+  - [ ] wind

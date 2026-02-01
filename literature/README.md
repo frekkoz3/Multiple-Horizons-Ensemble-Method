@@ -45,8 +45,6 @@ The results show that two of the proposed weighting procedures consistently outp
 First, the three satellite-based estimates and the model predictions are combined linearly based on a maximum likelihood estimate, in which the weighting coefficients are inversely proportional to the squares of the individual random errors determined by comparison with gauge observations and subjective assumptions. This combined analysis is then blended with an analysis based on gauge observations using a method that presumes that the bias of the gauge-based field is small where sufficient gauges are available and that the gradient of the precipitation field is best represented by the combination of satellite estimates and model predictions elsewhere.\
 The algorithm is applied to produce monthly precipitation analyses for an 18-month period from July 1987 to December 1988. Results showed substantial improvements of the merged analysis relative to the individual sources in describing the global precipitation field. The large-scale spatial patterns, both in the Tropics and the extratropics, are well represented with reasonable amplitudes. Both the random error and the bias have been reduced compared to the individual data sources, and the merged analysis appears to be of reasonable quality everywhere. However, the actual quality of the merged analysis depends strongly on our uncertain and incomplete knowledge of the error structures of the individual data sources.
 
-**! TO COMPLETE! This under here is just a little introduction, an idea!**
-
 ---
 
 ## 📄 Multi-output Ensembles for Multi-step Forecasting
@@ -184,7 +182,6 @@ Although the paper is not directly related to our proposed method, it offers val
 
 2025 (Online 2024), *Amal Tawakuli, Bastian Havers, Vincenzo Gulisano, Daniel Kaiser, Thomas Engel*
 
-
 > **Abstract** \
 > Data are naturally collected in their raw state and must undergo a series of preprocessing steps to obtain data in their input state for Artificial Intelligence (AI) and other applications. The data preprocessing phase is not only necessary to fit input requirements but also effective in improving AI training efficiency and output accuracy. 
 Data preprocessing is a time consuming and complex phase that lacks a unified and structured approach. We survey data preprocessing techniques under different categories to provide an extended and structured scope of data preprocessing relevant to numerical time-series data. We also provide an empirical analysis of the impact of 
@@ -193,6 +190,7 @@ preprocessing techniques on the quality of the data and on the performance of AI
 In this survey, the authors propose a taxonomy for time-series preprocessing, including feature engineering and data compression. They introduce a **Directed Acyclic Graph (DAG)** approach to standardizing the sequence of preprocessing tasks, ensuring that dependencies (e.g., handling outliers before normalization) are respected.
 
 The paper provides an empirical evaluation using the AirQuality dataset and LSTM networks, testing several critical categories:
+
 - **Normalization**: Results showed that **Z-score and Robust Standardization** yielded the highest prediction accuracy, reducing RMSE by ~49% compared to unnormalized data.
 - **Missing Data**: Two cases are identified: isolated missing instances (handled well by Cubic Spline Interpolation) and sequence/block missingness (requiring multivariate techniques like Expectation Maximization).
 - **Outlier Detection**: The authors found that removing outliers can sometimes degrade performance if those extreme values carry structural information.
@@ -211,6 +209,7 @@ This paper is relevant to our work as it provides a framework for the Data Granu
 This research focuses on the saturation effect in neural networks: when a network is trained on data with a specific range but is asked to forecast a series with a steep upward trend, the neurons often reach their activation limits, leading to systematic underestimation.
 
 To solve this, the authors evaluate:
+
 - **Differentiation**: Transforming the series into its first derivative ($\Delta y_t = y_t - y_{t-1}$) to stabilize the mean and remove the trend.
 - **Decomposition**: Using **Empirical Mode Decomposition (EMD)** and **Wavelet Transforms** on the differentiated series to further isolate signal from noise.
 
