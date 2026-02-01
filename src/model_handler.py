@@ -305,7 +305,6 @@ def auto_wf_baseline_each(dataset_init : str,
                                     data_config_path = data_config_path,
                                     model_config_paths = [model_config_path]
                                     )
-<<<<<<< HEAD
 
         if not pretrained_model: 
             # train model
@@ -322,15 +321,6 @@ def auto_wf_baseline_each(dataset_init : str,
                                     )
             models[model_name] = trained_model
             
-=======
-        
-        # train model
-        if tcn:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
-        else:
-            models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
->>>>>>> 406993641ff9ee9c714e9304053876213be2d3be
-        
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
         error = mse(prediction, test[1])
