@@ -42,6 +42,14 @@ To run the code contained in this repository, please follow the instructions bel
     git lfs install
 ```
 
+> **Note**
+If you are having trouble with some files showing up as git lfs pointer, just copy and paste the following inastructions into the terminal:
+
+```bash
+    git lfs install
+    git lfs pull
+```
+
 ## License
 
 MIT License
