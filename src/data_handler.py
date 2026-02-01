@@ -424,7 +424,6 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
 
         else:  # We are working on all the time series, so we aggregate them
             multiple_time_series = data.pivot(index=date_col, columns=id_col, values=target_col).sort_index()
-            print(multiple_time_series.shape)
             return multiple_time_series , data
     except KeyError as e:
         print(f"Error: {e}")
