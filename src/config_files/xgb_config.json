@@ -1,6 +1,6 @@
 {
-    "window": 168,
-    "horizon": 24,
+    "window": 60,
+    "horizon": 20,
     "n_estimators": 1,
     "max_depth": 6,
     "learning_rate": 0.1,

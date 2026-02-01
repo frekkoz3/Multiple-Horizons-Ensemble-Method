@@ -1,3 +1,25 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8c9bd05552ac22c8b1df90f38141f5800216bc89c3c5f50e403607503d6ed1e8
-size 443
+{
+    "window": 48,
+    "horizon": 24,
+    "n_layers": 3,
+    "inner_layers_dim": [
+        32,
+        16,
+        8
+    ],
+    "kernel_size": [
+        3,
+        3,
+        3
+    ],
+    "stride": 1,
+    "padding": 1,
+    "activation": "relu",
+    "learning_rate": 0.001,
+    "n_epochs": 100,
+    "batch_size": 32,
+    "weights_decay": "exp",
+    "loss": "horizon_weighted_huber",
+    "device": "cpu",
+    "skip": 5
+}
