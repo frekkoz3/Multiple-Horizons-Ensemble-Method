@@ -170,10 +170,8 @@ In particular, bootstrap-based variance estimation could provide a more expressi
 
 Given the large number of models and forecast horizons involved in the MHEMe framework, we adopt empirical error variance estimation as a computationally efficient and sufficiently accurate approximation. Exploring more advanced variance estimation techniques is left as future work.
 
-### Benchmarks
+### Skip horizon mechanism
 
----
-
-## Details
+Since the MHEMe framework is designed to produce forecasts over long horizons, training a separate base model for every single horizon would be computationally expensive and practically infeasible. To address this, we adopt a **skipping mechanism**, in which base models are trained only for horizons that increase in fixed increments, defined by a parameter called the *skip*. Specifically, instead of constructing a model for each horizon from 1 to the total forecast horizon, we train base models at horizons $1, 1+\text{skip}, 1+2\,\text{skip}, \dots, h$. During prediction, the autoregressive mechanism allows each base model to generate forecasts for intermediate horizons, effectively covering the entire range while significantly reducing the number of models required.
 
 ---

@@ -330,11 +330,9 @@ def data_preprocessing(time_series: np.ndarray, data_config_path : str, dataset_
     """ 
     with open(data_config_path, 'r') as f:
         config = json.load(f)
-
     datasets = {'e': 'electricity', 's': 'solar', 't': 'traffic', 'v': 'volatility', 'w': 'wind'}
     assert dataset_init in datasets, f"Dataset initials {dataset_init} not recognized. Choose among 'e', 's', 't', 'v', 'w'"
     dataset = datasets[dataset_init]
-
     try:
         if config[dataset]['aggregator']:
             time_series = data_time_aggregator(time_series, freq=config[dataset]['aggregator_window'])
@@ -349,7 +347,6 @@ def data_preprocessing(time_series: np.ndarray, data_config_path : str, dataset_
     except KeyError as e:
         print(f"Error: {e}")
         raise
-    
     return time_series
 
 
@@ -398,7 +395,7 @@ def data_loader(data_path : str, data_config_path : str, dataset_init : str) -> 
 
         else:  # We are working on all the time series, so we aggregate them
             multiple_time_series = data.pivot(index=date_col, columns=id_col, values=target_col).sort_index()
-
+            print(multiple_time_series.shape)
             return multiple_time_series , data
     except KeyError as e:
         print(f"Error: {e}")
@@ -455,11 +452,9 @@ def dataset_handler(dataset_init : str, data_path : str, data_config_path : str,
     X, data = data_loader(data_path = data_path, data_config_path = data_config_path, dataset_init = dataset_init)
     # Preprocess data
     X = data_preprocessing(X, data_config_path = data_config_path, dataset_init = dataset_init)
-
     # if X is 2D (Multiple series) is currently (Time, IDs)
     if X.ndim == 2:
         X = X.T
-
     # Create sliding windows
     with open(data_config_path, 'r') as f:
         config = json.load(f)

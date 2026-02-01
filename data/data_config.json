@@ -1,6 +1,6 @@
 {
     "electricity": {
-        "id_target": "MT_015",
+        "id_target": "MT_100",
         "id_col": "id",
         "filename": "electricity.csv",
         "target_col": "power_usage",
@@ -16,7 +16,7 @@
         "filler": false
     },
     "solar": {
-        "id_target": 0,
+        "id_target": "ALL",
         "id_col": "id",
         "filename": "solar.csv",
         "target_col": "power_mw",

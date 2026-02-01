@@ -339,19 +339,19 @@ class ARIMAModel(DirectModel):
     """
     ARIMA and SARIMA models. They are notì "direct" but autoregressive models, and thus used only as benchmarks. 
     """
-    def __init__(self, file_path : str, horizon : int | None = None):
+    def __init__(self, file_path: str, horizon: int | None = None):
         super().__init__(horizon, file_path)
         
+        # Load configuration
         with open(file_path, 'r') as f:
             config = json.load(f)
 
-        self.horizon = config['horizon'] if horizon is None else horizon
-        self.window = config['window']
+        self.horizon = config.get('horizon', horizon)
+        self.window = config.get('window', 1)
 
-        # --- Parameters ----
-        self.auto_arima = config['auto_arima']
-        self.seasonality = config['seasonality']
-        
+        self.auto_arima = config.get('auto_arima', True)
+        self.seasonality = config.get('seasonality', 1)
+
         if not self.auto_arima:
             self.p = config['p']
             self.d = config['d']
@@ -361,21 +361,30 @@ class ARIMAModel(DirectModel):
                 self.D = config['D']
                 self.Q = config['Q']
 
-        self.skip = config['skip']
+        self.skip = config.get('skip', 1)
+        self.model_params = None  # Store fitted model params only
+        self.model_class = None   # Keep track if statsmodels or pmdarima
 
     def fit(self, y: np.ndarray):
         if self.auto_arima:
             self.model = pm.auto_arima(y=y, m=self.seasonality)
+            self.model_params = self.model.get_params()
+            self.model_class = 'pmdarima'
         else:
-            # Statsmodels definition
             if self.seasonality == 1:
                 model_def = ARIMA(endog=y, order=(self.p, self.d, self.q))
             else:
-                model_def = ARIMA(endog=y, order=(self.p, self.d, self.q), 
-                                  seasonal_order=(self.P, self.D, self.Q, self.seasonality))
+                model_def = ARIMA(
+                    endog=y, 
+                    order=(self.p, self.d, self.q),
+                    seasonal_order=(self.P, self.D, self.Q, self.seasonality)
+                )
             self.model = model_def.fit()
+            # Save only parameters
+            self.model_params = self.model.params
+            self.model_class = 'statsmodels'
             
-            return self.model.summary()
+        return self.model.summary() if not self.auto_arima else None
 
 
     def predict(self, test: np.ndarray):
@@ -417,38 +426,84 @@ class ARIMAModel(DirectModel):
 
         return mse_error
         
-
     def save_model(self, file_path: str):
         """
-        Saves the ENTIRE wrapper class (Configuration + Internal Model).
-        This works for both pmdarima and statsmodels backends.
+        Save only configuration + fitted parameters, not the entire model.
+        This drastically reduces size.
         """
-        # Ensure correct extension
-        if file_path.endswith('.json'):
-             file_path = file_path.replace('.json', '.pkl')
-        elif not file_path.endswith('.pkl'):
-             file_path += '.pkl'
+        config = {
+            'horizon': self.horizon,
+            'window': self.window,
+            'auto_arima': self.auto_arima,
+            'seasonality': self.seasonality,
+            'skip': self.skip
+        }
 
-        # Check if fitted
-        if self.model is None:
-            print(f"Warning: Saving an unfitted ARIMA model to {file_path}")
+        if not self.auto_arima:
+            config.update({
+                'p': self.p,
+                'd': self.d,
+                'q': self.q
+            })
+            if self.seasonality > 1:
+                config.update({
+                    'P': self.P,
+                    'D': self.D,
+                    'Q': self.Q
+                })
 
-        # joblib handles the internal serialization of pmdarima or statsmodels objects automatically
-        joblib.dump(self, file_path)
-        print(f"ARIMA model (full wrapper) saved to {file_path}")
+        # Save both config and fitted parameters separately
+        save_dict = {
+            'config': config,
+            'model_class': self.model_class,
+            'model_params': self.model_params
+        }
+
+        if not file_path.endswith('.pkl'):
+            file_path += '.pkl'
+        joblib.dump(save_dict, file_path)
+        print(f"ARIMA model parameters saved to {file_path}")
 
     
     @classmethod
     def load_model(cls, file_path: str):
-        """
-        Loads the ENTIRE wrapper class.
-        """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"No model file found at {file_path}")
-        
-        # This restores the wrapper, the config, AND the correct inner model type
-        model = joblib.load(file_path)
-        return model
+
+        saved = joblib.load(file_path)
+        config = saved['config']
+        model_class = saved['model_class']
+        model_params = saved['model_params']
+
+        # Create wrapper instance with loaded config
+        temp_file_path = "temp_config.json"  # dummy, just to satisfy init
+        with open(temp_file_path, 'w') as f:
+            json.dump(config, f)
+
+        model_wrapper = cls(temp_file_path)
+        os.remove(temp_file_path)  # cleanup
+
+        model_wrapper.model_class = model_class
+        model_wrapper.model_params = model_params
+        model_wrapper.model = None  # model can be rebuilt on demand
+
+        return model_wrapper
+    
+    def rebuild_model(self, y: np.ndarray):
+        """
+        Reconstruct the ARIMA model from saved parameters.
+        """
+        if self.model_class == 'pmdarima':
+            self.model = pm.ARIMA(order=self.model_params['order'], seasonal_order=self.model_params.get('seasonal_order', None))
+            self.model.update(y)
+        elif self.model_class == 'statsmodels':
+            if self.seasonality == 1:
+                model_def = ARIMA(endog=y, order=(self.p, self.d, self.q))
+            else:
+                model_def = ARIMA(endog=y, order=(self.p, self.d, self.q), seasonal_order=(self.P, self.D, self.Q, self.seasonality))
+            self.model = model_def.fit(start_params=self.model_params)
+        else:
+            raise ValueError("Unknown model class")
 
 
 if __name__ == '__main__':

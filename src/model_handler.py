@@ -515,6 +515,7 @@ def auto_wf_umheme_all(dataset_init : str,
 
     # load data
     json_handler(file_path = data_config_path, id_target = "ALL", dataset = datasets[dataset_init])
+
     train, val, test, X, data = dataset_handler(dataset_init =dataset_init,
                                                 data_path = data_path,
                                                 data_config_path = data_config_path,
@@ -524,7 +525,6 @@ def auto_wf_umheme_all(dataset_init : str,
                                                 shuffle_internal = shuffle_internal,
                                                 random_state = random_state
                                                 )
-
     # define model
     model_config_path = model_config_paths[0] if isinstance(model_config_paths, list) else model_config_paths
     models = models_definer(dataset_init = [dataset_init],
@@ -632,7 +632,7 @@ def auto_wf_arima_each(dataset_init : str,
             trained_model = models_loader(file_path = trained_model_path, 
                                      config_path = model_config_path
                                     )
-            models[model_name] = trained_model
+            models[model_name] = trained_model.rebuild_model(train[0]) # should work
             
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
