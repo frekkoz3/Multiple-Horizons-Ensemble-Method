@@ -41,6 +41,6 @@
 
   - [x] electricity
   - [x] traffic
-  - [ ] solar
+  - [x] solar
   - [x] volatility
   - [x] wind
