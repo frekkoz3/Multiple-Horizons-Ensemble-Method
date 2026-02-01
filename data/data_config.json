@@ -1,3 +1,98 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e49d59b27508b71ab8635578a257c93cde193e62b552ffab36f0dadf90187de3
-size 2409
+{
+    "electricity": {
+        "id_target": "MT_015",
+        "id_col": "id",
+        "filename": "electricity.csv",
+        "target_col": "power_usage",
+        "date_col": "date",
+        "date_format": "%Y-%m-%d %H:%M:%S",
+        "window": 168,
+        "horizon": 24,
+        "skip": 7,
+        "aggregator": false,
+        "differentiator": false,
+        "scaler": true,
+        "scaler_type": "rob",
+        "filler": false
+    },
+    "solar": {
+        "id_target": 0,
+        "id_col": "id",
+        "filename": "solar.csv",
+        "target_col": "power_mw",
+        "date_col": "date",
+        "date_format": "%Y-%m-%d %H:%M:%S",
+        "window": 48,
+        "horizon": 24,
+        "skip": 7,
+        "aggregator": true,
+        "aggregator_window": "1h",
+        "differentiator": false,
+        "scaler": true,
+        "scaler_type": "rob",
+        "filler": false
+    },
+    "traffic": {
+        "id_target": 400044,
+        "id_col": "id",
+        "filename": "traffic.csv",
+        "target_col": "occupancy",
+        "date_col": "hours_from_start",
+        "date_format": "%Y",
+        "window": 168,
+        "horizon": 24,
+        "skip": 13,
+        "aggregator": false,
+        "differentiator": true,
+        "differentiator_orders": [
+            1,
+            0,
+            24
+        ],
+        "scaler": true,
+        "scaler_type": "rob",
+        "filler": false
+    },
+    "volatility": {
+        "id_target": ".AEX",
+        "id_col": "Symbol",
+        "filename": "volatility.csv",
+        "target_col": "log_vol",
+        "date_col": "date",
+        "date_format": "%Y-%m-%d",
+        "window": 60,
+        "horizon": 20,
+        "skip": 7,
+        "aggregator": false,
+        "differentiator": true,
+        "differentiator_orders": [
+            1,
+            0,
+            24
+        ],
+        "scaler": true,
+        "scaler_type": "rob",
+        "filler": false
+    },
+    "wind": {
+        "id_target": "DE",
+        "id_col": "id",
+        "filename": "wind.csv",
+        "target_col": "power_output",
+        "date_col": "date",
+        "date_format": "%Y-%m-%d",
+        "window": 30,
+        "horizon": 14,
+        "skip": 5,
+        "aggregator": false,
+        "differentiator": true,
+        "differentiator_orders": [
+            1,
+            0,
+            365
+        ],
+        "scaler": true,
+        "scaler_type": "rob",
+        "filler": false
+    }
+}

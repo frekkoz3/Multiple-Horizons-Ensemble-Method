@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:035066bb1b3ba0b26e402622bd363263c6bbe2b3117f3c96e70361dcefc57c7d
-size 221
+{
+    "window": 168,
+    "horizon": 24,
+    "auto_arima": false,
+    "seasonality": 24,
+    "p": 1,
+    "d": 1,
+    "q": 1,
+    "P": 1,
+    "D": 1,
+    "Q": 1,
+    "weights_decay": "uni",
+    "loss": "mse",
+    "skip": 7
+}
