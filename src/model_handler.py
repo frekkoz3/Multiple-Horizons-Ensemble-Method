@@ -133,7 +133,7 @@ def models_trainer(models : dict, train : np.ndarray, dataset_init : str, save_m
 
         if save_models:
             os.makedirs(models_path_save, exist_ok=True)
-            if np.strings.endswith(model_name, '.pkl'):
+            if model_name.endswith('.pkl'):
                 model_instance.save_model(f"{models_path_save}/{model_name}")
             else:
                 model_instance.save_model(f"{models_path_save}/{model_name}_{dataset_init}.pkl")
@@ -322,15 +322,21 @@ def auto_wf_baseline_each(dataset_init : str,
                 models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
         else:
             # models are already pre-trained
-            model_name, _ = list(models.items())[0]
-            if np.strings.endswith(model_name, '.pkl'):
-                trained_model_path = f"{models_path_save}/{model_name}"
-            else:
-                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
-            trained_model = models_loader(file_path = trained_model_path, 
-                                     config_path = model_config_path
-                                    )
-            models[model_name] = trained_model
+            for model_name in list(models.keys()):
+                if model_name.endswith('.pkl'):
+                    trained_model_path = f"{models_path_save}/{model_name}"
+                else:
+                    trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
+
+                print(f"Loading pre-trained model from: {trained_model_path}")
+                trained_model = models_loader(file_path=trained_model_path, 
+                                             config_path=model_config_path)
+                
+                if trained_model is None:
+                    raise FileNotFoundError(f"Failed to load model: {trained_model_path}. check if the file exists.")
+                
+                models[model_name] = trained_model
+
             
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -339,7 +345,7 @@ def auto_wf_baseline_each(dataset_init : str,
         whole_predictions[uid] = prediction
         whole_errors[uid] = error
 
-    whole_errors['mean'] = np.array(list(dict.values())).mean()
+    whole_errors['mean'] = np.array(list(whole_errors.values())).mean()
         
     return whole_errors
     
@@ -402,15 +408,20 @@ def auto_wf_baseline_all(dataset_init : str,
             models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
     else:
         # models are already pre-trained
-        model_name, _ = list(models.items())[0]
-        if np.strings.endswith(model_name, '.pkl'):
-            trained_model_path = f"{models_path_save}/{model_name}"
-        else:
-            trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
-        trained_model = models_loader(file_path = trained_model_path, 
-                                 config_path = model_config_path
-                                )
-        models[model_name] = trained_model
+        for model_name in list(models.keys()):
+            if model_name.endswith('.pkl'):
+                trained_model_path = f"{models_path_save}/{model_name}"
+            else:
+                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
+            
+            print(f"Loading pre-trained model from: {trained_model_path}")
+            trained_model = models_loader(file_path=trained_model_path, 
+                                            config_path=model_config_path)
+            
+            if trained_model is None:
+                raise FileNotFoundError(f"Failed to load model: {trained_model_path}. check if the file exists.")
+            
+            models[model_name] = trained_model
         
     # evaluate model
     prediction = models_evaluator(models, test, dataset_init)
@@ -491,16 +502,21 @@ def auto_wf_umheme_each(dataset_init : str,
                                )
         else:
             # models are already pre-trained
-            model_name, _ = list(models.items())[0]
-            if np.strings.endswith(model_name, '.pkl'):
-                trained_model_path = f"{models_path_save}/{model_name}"
-            else:
-                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
-            trained_model = models_loader(file_path = trained_model_path, 
-                                     config_path = model_config_path
-                                    )
-            models[model_name] = trained_model
-            
+            for model_name in list(models.keys()):
+                if model_name.endswith('.pkl'):
+                    trained_model_path = f"{models_path_save}/{model_name}"
+                else:
+                    trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
+                
+                print(f"Loading pre-trained model from: {trained_model_path}")
+                trained_model = models_loader(file_path=trained_model_path, 
+                                             config_path=model_config_path)
+                
+                if trained_model is None:
+                    raise FileNotFoundError(f"Failed to load model: {trained_model_path}. check if the file exists.")
+                
+                models[model_name] = trained_model
+
         
         # evaluate model
         prediction = models_evaluator(models, test, dataset_init)
@@ -509,7 +525,7 @@ def auto_wf_umheme_each(dataset_init : str,
         whole_predictions[uid] = prediction
         whole_errors[uid] = error
 
-    whole_errors['mean'] = np.array(list(dict.values())).mean()
+    whole_errors['mean'] = np.array(list(whole_errors.values())).mean()
         
     return whole_errors
 
@@ -567,15 +583,20 @@ def auto_wf_umheme_all(dataset_init : str,
                        )
     else:
         # models are already pre-trained
-        model_name, _ = list(models.items())[0]
-        if np.strings.endswith(model_name, '.pkl'):
-            trained_model_path = f"{models_path_save}/{model_name}"
-        else:
-            trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
-        trained_model = models_loader(file_path = trained_model_path, 
-                                 config_path = model_config_path
-                                )
-        models[model_name] = trained_model
+        for model_name in list(models.keys()):
+            if model_name.endswith('.pkl'):
+                trained_model_path = f"{models_path_save}/{model_name}"
+            else:
+                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
+            
+            print(f"Loading pre-trained model from: {trained_model_path}")
+            trained_model = models_loader(file_path=trained_model_path, 
+                                            config_path=model_config_path)
+            
+            if trained_model is None:
+                raise FileNotFoundError(f"Failed to load model: {trained_model_path}. check if the file exists.")
+            
+            models[model_name] = trained_model
 
     # evaluate model
     prediction = models_evaluator(models, test, dataset_init)
@@ -690,23 +711,29 @@ def auto_wf_arima_each(dataset_init : str,
             models_trainer(models, train, dataset_init, save_models = True, models_path_save = models_path_save)
         else:
             # models are already pre-trained
-            model_name, _ = list(models.items())[0]
-            if np.strings.endswith(model_name, '.pkl'):
-                trained_model_path = f"{models_path_save}/{model_name}"
-            else:
-                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
-            trained_model = models_loader(file_path = trained_model_path, 
-                                     config_path = model_config_path,
-                                     is_arima=True
-                                    )
-            trained_model.rebuild_model(train[0])
-            models[model_name] = trained_model
+            for model_name in list(models.keys()):
+                if model_name.endswith('.pkl'):
+                    trained_model_path = f"{models_path_save}/{model_name}"
+                else:
+                    trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
+                
+                print(f"Loading and rebuilding ARIMA: {trained_model_path}")
+                trained_model = models_loader(file_path = trained_model_path, 
+                                             config_path = model_config_path,
+                                             is_arima = True)
+                
+                if trained_model is None:
+                    raise FileNotFoundError(f"ARIMA model not found at {trained_model_path}")
+                
+                # IMPORTANT: You must rebuild the internal state using the training data
+                trained_model.rebuild_model(train[0])
+                models[model_name] = trained_model
             
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
         whole_errors[uid] = error
 
-    whole_errors['mean'] = np.array(list(dict.values())).mean()
+    whole_errors['mean'] = np.array(list(whole_errors.values())).mean()
 
     return whole_errors
 
