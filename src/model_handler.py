@@ -339,6 +339,8 @@ def auto_wf_baseline_each(dataset_init : str,
         whole_predictions[uid] = prediction
         whole_errors[uid] = error
 
+    whole_errors['mean'] = np.array(list(dict.values())).mean()
+        
     return whole_errors
     
 
@@ -506,6 +508,8 @@ def auto_wf_umheme_each(dataset_init : str,
         
         whole_predictions[uid] = prediction
         whole_errors[uid] = error
+
+    whole_errors['mean'] = np.array(list(dict.values())).mean()
         
     return whole_errors
 
@@ -701,6 +705,8 @@ def auto_wf_arima_each(dataset_init : str,
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
         whole_errors[uid] = error
+
+    whole_errors['mean'] = np.array(list(dict.values())).mean()
 
     return whole_errors
 
