@@ -25,22 +25,22 @@
 
   - [x] electricity
   - [x] traffic
-  - [ ] solar
-  - [ ] volatility
+  - [x] solar
+  - [x] volatility
   - [x] wind
 
 - XGBoost each:
 
-  - [ ] electricity
+  - [x] electricity
   - [x] traffic
   - [x] solar
-  - [ ] volatility
-  - [ ] wind
+  - [x] volatility
+  - [x] wind
 
 - ARIMA each:
 
-  - [ ] electricity
+  - [x] electricity
   - [x] traffic
-  - [ ] solar
-  - [ ] volatility
+  - [x] solar
+  - [x] volatility
   - [x] wind

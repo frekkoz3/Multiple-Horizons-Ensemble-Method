@@ -54,7 +54,7 @@
         "filler": false
     },
     "volatility": {
-        "id_target": ".AEX",
+        "id_target": ".STOXX50E",
         "id_col": "Symbol",
         "filename": "volatility.csv",
         "target_col": "log_vol",

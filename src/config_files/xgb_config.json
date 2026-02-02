@@ -1,5 +1,5 @@
 {
-    "window": 168,
+    "window": 48,
     "horizon": 24,
     "n_estimators": 1,
     "max_depth": 6,

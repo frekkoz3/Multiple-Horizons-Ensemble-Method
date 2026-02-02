@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
     "window": 30,
     "horizon": 14,
+=======
+    "window": 48,
+    "horizon": 24,
+>>>>>>> 0e5d8a73d15d5f4ebcae13c7ac572e9e31391f9a
     "n_layers": 3,
     "inner_layers_dim": [
         32,
