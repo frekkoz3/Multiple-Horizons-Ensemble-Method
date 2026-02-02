@@ -67,7 +67,7 @@ $$
 
 For each model $ i \in \{1,\dots,h\} $ and forecast step $ f \in \{1,\dots,h\} $, estimate the prediction variance
 $$
-v_{i,f} = \mathrm{Var}(\hat{x}^{(i)}_{t+f}),
+v_{i,f} = \mathrm{Var}(\epsilon^{(i)}_{t+f}),
 $$
 using an appropriate uncertainty estimation method (e.g. jackknife resampling, bootstrap, or meta-learning).
 
