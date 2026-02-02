@@ -516,7 +516,7 @@ def auto_wf_umheme_all(dataset_init : str,
                        model_config_paths : str | list[str],
                        prop : float = (0.7, 0.1, 0.2),
                        shuffle_data : bool = False,
-                       shuffle_internal : bool = True,
+                       shuffle_internal : bool = False,
                        random_state : int = 42,
                        skip : int = 1,
                        weight_type : list[str] | None = ['soft_lin', 'strong_lin', 'exp'],
@@ -577,6 +577,45 @@ def auto_wf_umheme_all(dataset_init : str,
     prediction = models_evaluator(models, test, dataset_init)
     error = mse(prediction, test[1])
     error_dict = {'whole_dataset': error}
+
+    # calculate the uid loss
+    if pretrained_model:
+        full_df = pd.read_csv(data_path + f'/{datasets[dataset_init]}.csv')
+
+        # Load data_config
+        with open(data_config_path, 'r') as f:
+            config = json.load(f)
+            
+        unique_ids = full_df[config[datasets[dataset_init]]['id_col']].unique().tolist()
+        
+        # B. Calculate Slice Parameters
+        num_ids = len(unique_ids)
+        total_predictions = len(prediction)
+        
+        slice_length = total_predictions // num_ids
+        
+        whole_errors = {}
+
+        for i, uid in enumerate(unique_ids):
+            start_pos = i * slice_length
+            
+            # For the last element, extend to the end to catch any remainder 
+            if i == num_ids - 1:
+                end_pos = total_predictions
+            else:
+                end_pos = (i + 1) * slice_length
+            
+            # Slice the prediction and ground truth arrays
+            batch_pred = prediction[start_pos : end_pos]
+            batch_true = test[1][start_pos : end_pos]
+            
+            # Calculate error
+            if len(batch_pred) > 0:
+                batch_error = mse(batch_pred, batch_true)
+                whole_errors[uid] = batch_error
+
+        # D. Flatten Dictionary for models_saver
+        error_dict.update(whole_errors)
 
     return error_dict
 
