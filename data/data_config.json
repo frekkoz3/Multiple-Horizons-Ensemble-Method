@@ -33,7 +33,7 @@
         "filler": false
     },
     "traffic": {
-        "id_target": 400206,
+        "id_target": 400031,
         "id_col": "id",
         "filename": "traffic.csv",
         "target_col": "occupancy",
@@ -75,7 +75,7 @@
         "filler": false
     },
     "wind": {
-        "id_target": "ALL",
+        "id_target": "AT",
         "id_col": "id",
         "filename": "wind.csv",
         "target_col": "power_output",
