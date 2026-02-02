@@ -177,7 +177,7 @@ def models_loader(file_path: str, config_path : str | None = None, is_arima = Fa
     
     if is_arima:
         try:
-            return ARIMAModel.load_model(config_path)
+            return ARIMAModel.load_model(file_path)
         except Exception as e:
             print(f"Failed to load {file_path}: {e}")
             return None
@@ -323,7 +323,10 @@ def auto_wf_baseline_each(dataset_init : str,
         else:
             # models are already pre-trained
             model_name, _ = list(models.items())[0]
-            trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+            if np.strings.endswith(model_name, '.pkl'):
+                trained_model_path = f"{models_path_save}/{model_name}"
+            else:
+                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
             trained_model = models_loader(file_path = trained_model_path, 
                                      config_path = model_config_path
                                     )
@@ -398,7 +401,10 @@ def auto_wf_baseline_all(dataset_init : str,
     else:
         # models are already pre-trained
         model_name, _ = list(models.items())[0]
-        trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+        if np.strings.endswith(model_name, '.pkl'):
+            trained_model_path = f"{models_path_save}/{model_name}"
+        else:
+            trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
         trained_model = models_loader(file_path = trained_model_path, 
                                  config_path = model_config_path
                                 )
@@ -484,7 +490,10 @@ def auto_wf_umheme_each(dataset_init : str,
         else:
             # models are already pre-trained
             model_name, _ = list(models.items())[0]
-            trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+            if np.strings.endswith(model_name, '.pkl'):
+                trained_model_path = f"{models_path_save}/{model_name}"
+            else:
+                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
             trained_model = models_loader(file_path = trained_model_path, 
                                      config_path = model_config_path
                                     )
@@ -555,7 +564,10 @@ def auto_wf_umheme_all(dataset_init : str,
     else:
         # models are already pre-trained
         model_name, _ = list(models.items())[0]
-        trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+        if np.strings.endswith(model_name, '.pkl'):
+            trained_model_path = f"{models_path_save}/{model_name}"
+        else:
+            trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
         trained_model = models_loader(file_path = trained_model_path, 
                                  config_path = model_config_path
                                 )
@@ -636,12 +648,16 @@ def auto_wf_arima_each(dataset_init : str,
         else:
             # models are already pre-trained
             model_name, _ = list(models.items())[0]
-            trained_model_path = models_path_save + f'/{model_name}_{dataset_init}.pkl'
+            if np.strings.endswith(model_name, '.pkl'):
+                trained_model_path = f"{models_path_save}/{model_name}"
+            else:
+                trained_model_path = f"{models_path_save}/{model_name}_{dataset_init}.pkl"
             trained_model = models_loader(file_path = trained_model_path, 
                                      config_path = model_config_path,
                                      is_arima=True
                                     )
-            models[model_name] = trained_model.rebuild_model(train[0]) # should work
+            trained_model.rebuild_model(train[0])
+            models[model_name] = trained_model
             
         # evaluate model
         error = models_evaluator(models, test, dataset_init)
