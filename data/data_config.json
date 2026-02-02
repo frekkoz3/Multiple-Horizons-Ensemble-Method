@@ -75,7 +75,7 @@
         "filler": false
     },
     "wind": {
-        "id_target": "AT",
+        "id_target": "UK",
         "id_col": "id",
         "filename": "wind.csv",
         "target_col": "power_output",
