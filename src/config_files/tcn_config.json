@@ -1,6 +1,6 @@
 {
-    "window": 168,
-    "horizon": 24,
+    "window": 30,
+    "horizon": 14,
     "n_layers": 3,
     "inner_layers_dim": [
         32,

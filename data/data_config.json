@@ -16,7 +16,7 @@
         "filler": false
     },
     "solar": {
-        "id_target": 0,
+        "id_target": "ALL",
         "id_col": "id",
         "filename": "solar.csv",
         "target_col": "power_mw",
@@ -75,7 +75,7 @@
         "filler": false
     },
     "wind": {
-        "id_target": "AT",
+        "id_target": "ALL",
         "id_col": "id",
         "filename": "wind.csv",
         "target_col": "power_output",
