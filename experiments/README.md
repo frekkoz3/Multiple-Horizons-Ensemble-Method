@@ -13,3 +13,5 @@ Although each notebook is self-contained, they are designed to be executed in th
    Notebook dedicated to the visualization and analysis of the ensemble predictions vs the base-models' predictions.
 4. **`Evaluation.ipynb`**  
    Notebook dedicated to the quantitative evaluation of the proposed method on the five selected benchmark datasets against the other baseline methods.
+4. **`Model Ranking.ipynb`**  
+   Notebook dedicated to the ranking of model performances based on the MSE results of the evaluation.
