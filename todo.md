@@ -9,7 +9,7 @@
 - [x] **MHEMe** to add to the report (and the readme) the fact that the actual implementation includes horizon skip
 - [x] **MHEMe** write a function to stack train, evaluation and test set
 
-- [ ] **MHEMe presentation** : final presentation of the project (intro to time series, theory behind MHEMe, implementation and results, future ideas)
+- [x] **MHEMe presentation** : final presentation of the project (intro to time series, theory behind MHEMe, implementation and results, future ideas)
 
 ## EVALUATION LISTS
 
