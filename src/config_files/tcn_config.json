@@ -1,5 +1,5 @@
 {
-    "window": 48,
+    "window": 168,
     "horizon": 24,
     "n_layers": 3,
     "inner_layers_dim": [
