@@ -9,7 +9,7 @@ Although each notebook is self-contained, they are designed to be executed in th
    Notebook dedicated to the **Exploratory Data Analysis (EDA)** of the five selected benchmark datasets.
 2. **`Horizon Aware Loss.ipynb`**  
    Notebook dedicated to the analysis of the impact of the **Horizon-Aware Huber Loss** on the proposed method.
-3. **`Variance.ipynb`**  
-   Notebook dedicated to the visualization and analysis of prediction variances across different forecasting horizons.
+3. **`Ensemble vs Base Models.ipynb`**  
+   Notebook dedicated to the visualization and analysis of the ensemble predictions vs the base-models' predictions.
 4. **`Evaluation.ipynb`**  
-   Notebook dedicated to the quantitative evaluation of the proposed method on the five selected benchmark datasets.
+   Notebook dedicated to the quantitative evaluation of the proposed method on the five selected benchmark datasets against the other baseline methods.

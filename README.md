@@ -41,6 +41,7 @@ To run the code contained in this repository, please follow the instructions bel
     pip install -e .
     nbdime config-git --enable
     git lfs install
+    git lfs pull
 ```
 
 > **Note**
