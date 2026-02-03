@@ -224,7 +224,7 @@ def models_saver(dataset_init : str, errors: dict):
     
     if records:
         df_results = pd.DataFrame(records)
-        csv_filename = f"../models/results/errors_{dataset_init}_{timestamp}.csv"
+        csv_filename = f"../results/errors_{dataset_init}_{timestamp}.csv"
         os.makedirs(os.path.dirname(csv_filename), exist_ok=True)
         df_results.to_csv(csv_filename, index=False)
         print(f"Results (CSV) saved to: {csv_filename}")
@@ -241,7 +241,7 @@ def models_saver(dataset_init : str, errors: dict):
                 return obj.tolist()
             return super().default(obj)
 
-    json_filename = f"../models/results/errors_{dataset_init}_{timestamp}.json"
+    json_filename = f"../results/errors_{dataset_init}_{timestamp}.json"
     with open(json_filename, 'w') as f:
         json.dump(errors, f, indent=4, cls=TypeEncoder)
     print(f"Results (JSON) saved to: {json_filename}")
