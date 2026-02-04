@@ -14,4 +14,4 @@ Although each notebook is self-contained, they are designed to be executed in th
 4. **`Evaluation.ipynb`**  
    Notebook dedicated to the quantitative evaluation of the proposed method on the five selected benchmark datasets against the other baseline methods.
 5. **`Model Ranking.ipynb`**  
-   Notebook dedicated to the ranking of model performances based on the MSE results of the evaluation.
+   Notebook dedicated to the ranking of model performances derived from the MSE results of the evaluation.
